@@ -1,0 +1,4 @@
+# file da ignorare
+conn.php
+ldap.php 
+jwt.php

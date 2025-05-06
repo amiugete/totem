@@ -1,0 +1,20 @@
+{
+    "require": {
+        "components/jquery": "^3.7",
+        "twbs/bootstrap": "5.3.1",
+        "twbs/bootstrap-icons": "^1.11",
+        "fortawesome/font-awesome": "^6.7",
+        "snapappointments/bootstrap-select": "^1.13",
+        "wenzhixin/bootstrap-table": "^1.24",
+        "eternicode/bootstrap-datepicker": "^1.10",
+        "hhurz/tableexport.jquery.plugin": "^1.33",
+        "moment/moment": "^2.30"
+    },
+    "config": {
+        "allow-plugins": {
+            "robloach/component-installer": true,
+            "composer/installers": true,
+            "oomphinc/composer-installers-extender": true
+        }
+    }
+}
