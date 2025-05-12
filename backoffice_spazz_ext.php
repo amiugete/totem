@@ -52,8 +52,7 @@ the_page_title();
 require_once ('./conn.php');
 
 
-# filtro sulle UT
-$filter_totem="OK";
+
 
 
 ?> 
@@ -91,19 +90,68 @@ $name=dirname(__FILE__);
 
 
 <div class="container">
+
 <?php 
 
-$uos=170;
+
+# filtro sulle UT che abbiano il totem
+$filter_totem="OK";
+
+
+require_once('./query_ut.php');
+
+
+$result1 = pg_prepare($conn, "query_ut", $query_ut);
+if (pg_last_error($conn)){
+  echo pg_last_error($conn);
+  //$res_ok=$res_ok+1;
+}
+$result1 = pg_execute($conn, "query_ut", array($_SESSION['username']));
+if (pg_last_error($conn)){
+  echo pg_last_error($conn);
+  //$res_ok=$res_ok+1;
+}
+
+// se una sola UT non la faccio nemmeno scegliere
+
+$r = pg_fetch_all ($result1);
+//echo count($r)."<br>";
+if (count($r) == 1) {
+  $ut0 = $r[0]['id_ut'];
+} else {
+  $ut0=$_POST['ut0'];
+}
+
+
+
+if ($ut0) {
+  $query0='select u.id_ut, u.descrizione, cmu.id_uo
+  from topo.ut u
+  left join anagrafe_percorsi.cons_mapping_uo cmu on cmu.id_uo_sit = u.id_ut 
+  where id_ut = $1';
+
+  $result0 = pg_prepare($conn, "my_query0", $query0);
+  $result0 = pg_execute($conn, "my_query0", array($ut0));
+  
+  while($r0 = pg_fetch_assoc($result0)) {
+      $uos=$r0["id_uo"];
+      $uos_descrizione= $r0["descrizione"];
+  }
+  //echo $uos;
+
 
 $today = new DateTime('now');
 $timezone = new DateTimeZone('Europe/Rome');
 $today->setTimezone($timezone);
 $hour = $today->format('Hi');
-if ($hour < '0820'){
+if ($hour < '1120'){
     $today = $today->modify("-1 day");
     $nota_data='<font color="red"> <i class="fa-solid fa-clock-rotate-left"></i> Prima della fine del turno mattutino è impostata di default la data di ieri </font>';
 } 
 ?>
+
+
+
 
 <style>
 .vl {
@@ -113,10 +161,16 @@ if ($hour < '0820'){
 </style>
 
 <form  class="row row-cols-lg-auto g-3 align-items-center" name="form_filtro" id="form_filtro" autocomplete="off">
-    <input type="hidden" class="form-control" id="uos" name="uos" value="11" required>
+   
 
+    <input type="hidden" class="form-control" id="uos" name="uos" value="<?php echo $uos;?>" required>
 
+<div class="form-group col-lg-3">
+  <?php echo $uos_descrizione." - " ;?>
+<a class="btn btn-info" href="<?php echo basename($_SERVER['PHP_SELF']);?>"> <i class="fa-solid fa-house"></i>Cambia UT</a>
+</div>
 
+<i class="fa-solid fa-grip-lines-vertical"></i>
 
 <div class="form-group col-lg-3">
     <label for="data_percorsi" class="form-label">Data verifica</label>
@@ -130,6 +184,8 @@ if ($hour < '0820'){
 </form>
 
 <script>
+
+
   function cambiata_data(val) {
     console.log("Bottone cambiata_data  cliccato");
     var data_percorsi=val;
@@ -179,11 +235,13 @@ if ($hour < '0820'){
 </script>
 
 
+
+
 <hr>
 
 <div id="tabella">
             
-        <h4>Report consuntivazione spazzamento da totem </h4>
+        <h4>Report consuntivazione spazzamento da totem - <?php echo $uos_descrizione;?></h4>
 
         <!-- Button trigger modal -->
 <!--button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
@@ -465,9 +523,9 @@ window.consEvents = {
         console.log('id = ' +id);
         console.log('datalav = '+datalav);
         $.ajax({   
-            type: "GET",
+            type: "POST",
             url: "report_totem_percorsi_cons_s.php",
-            data: 'id=' + id + '&datalav='+datalav,
+            data: 'id=' + id + '&datalav='+datalav +'&consuntivatore=UT'+<?php echo $uos;?>+'',
             dataType: "text",                  
             success: function(response){                    
                 $(".modal-body").html(response); 
@@ -533,6 +591,56 @@ window.consEvents = {
 
 </div>
 
+<?php
+
+// se non ho selezionato la UT
+
+} else {
+  //echo 'Sono qua';
+  //echo $_SESSION['username'];
+ 
+
+//echo "<br>". $query_ut;
+  ?>
+<form class="row" name="open_ut" method="post" id="open_ut" autocomplete="off" action="<?php echo basename($_SERVER['PHP_SELF']);?>" >
+<div class="form-group col-lg-4">
+<select class="selectpicker show-tick form-control" 
+data-live-search="true" name="ut0" id="ut0" onchange="utScelta(this.value);" required="">
+
+  <option name="ut0" value="0">Seleziona una UT</option>
+
+
+<?php            
+
+
+
+
+
+
+
+$result1 = pg_execute($conn, "query_ut", array($_SESSION['username']));
+if (pg_last_error($conn)){
+  echo pg_last_error($conn);
+  //$res_ok=$res_ok+1;
+}
+
+
+while($r1 = pg_fetch_assoc($result1)) { 
+?>    
+      <option name="ut0" value="<?php echo $r1['id_ut'];?>" ><?php echo $r1['descrizione']?></option>
+<?php 
+}
+pg_free_result($result1); 
+?>
+
+</select>  
+</div>
+</form>
+
+<?php
+  
+}
+?>
 
 </div>
 
@@ -540,6 +648,28 @@ window.consEvents = {
 require_once('req_bottom.php');
 require('./footer.php');
 ?>
+
+
+
+<!-- Script -->
+<<script type="text/javascript">
+  const myModalEl = document.getElementById('viewMemberModal');
+
+  myModalEl.addEventListener('hidden.bs.modal', function () {
+    // Funzione da eseguire alla chiusura del modal
+    //console.log("Modal chiuso");
+    // Qui puoi chiamare qualsiasi altra funzione
+    var data_percorsi=$('#js-date3').val();
+    //console.log(data_percorsi);
+    //console.log($table);
+    $table.bootstrapTable('refresh', {
+    url: "./tables/report_totem_percorsi_s.php?uos="+<?php echo $uos;?>+"&d="+data_percorsi
+});   
+    console.log('refresh fatto');
+});
+
+  
+</script>
 
 
 <script type="text/javascript">
@@ -558,7 +688,8 @@ $('#js-date3').datepicker({
 
   //$('#myIframe').attr('src', "https://expo.wingsoft.it/amiu/webapp/indexdesk.php?operatore=0170"); 
  
-  
+
+
 </script>
 
 

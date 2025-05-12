@@ -53,7 +53,7 @@ if ($check_modal!=1){
 <div id="intestazione" class="banner"> <div id="banner-image">
 <h3>  <a class="navbar-brand link-light" href="./index.php">
     <img class="pull-left" src="img\amiu_small_white.png" alt="SIT" width="85px">
-    <span>Backoffice 
+    <span> Backoffice consuntivazione 
     <?php 
     if ($_SESSION['test']==1) {
        echo "(ambiente di TEST)";

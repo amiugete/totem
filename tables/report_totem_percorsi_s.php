@@ -95,7 +95,7 @@ from (
 		left join raccolta.anagr_turni at2 on at2.id_turno = tt.id_turno
 		--left join raccolta.tipi_rifiuto tr on tr.nome= cpra.tipo_rifiuto 
 		--left join spazzamento.aste_ut pu on pu.id_asta=cpra.id_asta
-		left join spazzamento.effettuati ea on ea.tappa::bigint = cpra.id_tappa_raggr::bigint 
+		left join spazzamento.v_effettuati ea on ea.tappa::bigint = cpra.id_tappa_raggr::bigint 
 											and ea.datalav = to_date($1, 'DD/MM/YYYY')
 		left join spazzamento.causali_testi ct on trim(ct.descrizione) = trim(ea.causale)
 		where (to_date($1, 'DD/MM/YYYY') between cpra.data_inizio and (cpra.data_fine - interval '1' day))

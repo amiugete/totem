@@ -28,7 +28,7 @@ if(!isset($_COOKIE['origine'])) {
 	//$_COOKIE['origine']=$_SESSION['origine'];
 	$origine=$_COOKIE["origine"];
 	if ($origine==""){
-		$origine="backoffice_spazz_ext.php";
+		$origine="index.php";
 	}
 } else {
 	//echo "Cookie un is set!<br>";
@@ -110,24 +110,51 @@ if (isset($_POST["ldapLogin"])){
 	<body data-rsssl=1 data-rsssl=1>
 	
     <!--div class="banner"> <div id="banner-image"></div> </div-->
+	<div class="navbar-header">
+<div id="intestazione" class="banner"> <div id="banner-image">
+<h3>  <a class="navbar-brand link-light" href="./index.php">
+    <img class="pull-left" src="img\amiu_small_white.png" alt="SIT" width="85px">
+    <span>Backoffice consuntivazione
+    <?php 
+    if ($_SESSION['test']==1) {
+       echo "(ambiente di TEST)";
+    }
+    ?>
+    </span> 
+  </a> 
+</h3>
+</div> 
+</div>
 
-      <div class="container">
+<script>
+$("body").css("margin-top", "77px");
+</script>
+
+<div class="container">
+
+	  
 		<?php		
 			if ($errorMessage != "") echo "<h3 style='color:red;'>$errorMessage</h3>";
 			//if ($successMessage != "") echo "<h3 style='color:blue;'>$successMessage</h3>";
 		?>
-		<h3 style="color:orange">Inserisci credenziali AMIU (utente e password con cui accedi al PC) </h3>
+		<h3 style="color:orange">Inserisci credenziali AMIU </h3>
 		<form action="" method="post" style="display:inline-block;">
         <div class="row g-3 align-items-center">
 			<div class="form-group">
 				<label for="user">Utente</label>
 				<input type="text" class="form-control" name="user" value="" maxlength="50">
+				<small><i>Per utenti interni (AMIU) è il nome utente di dominio senza @amiu.genova.it e senza DSI.
+					<br>Per utenti esterni è il nome utente comunicato.
+				</i></small>
 			</div>
 			
 			<div class="form-group">
 				<label for="password">Password</label>
 				<input type="password" class="form-control" name="password" id="password" value="" maxlength="50">  <i class="bi bi-eye-slash" 
 						id="togglePassword"></i>
+				<br><small><i>Per utenti interni (AMIU) è la password con cui accedi al PC.
+					<br>Per utenti esterni è la password comunicata.
+				</i></small>
 			</div>
 			<br>
 			<div class="form-group">

@@ -21,6 +21,7 @@ echo $_GET["uos"] ;
 
 $id=$_GET['id'];
 $datalav=$_GET['datalav'];
+$id_uo=$_GET['id_uo'];
 
 /*echo $id.'<br>';
 echo $datalav.'<br>';
@@ -36,14 +37,14 @@ if(!$conn_hub) {
 $query0="
 select 
     *, 
-    case when check_previsto = 1 then true
-    else false
-    end as check
+    case when check_previsto = 1 or id_causale is not null then 1
+    else 0
+    end check_prev_cons
 from 
-    (select id_tappa_raggr as tappa, 
+    (select distinct id_tappa_raggr as tappa, 
     id_percorso as idpercorso, 
     desc_uo as zona,
-    nome_via, 
+    cpra.nome_via, 
     nota_via as tratto, 
     case 
                 when extract(dow from to_date($1, 'YYYY-MM-DD'))=1 then cpra.lun
@@ -53,11 +54,14 @@ from
                 when extract(dow from to_date($1, 'YYYY-MM-DD'))=5 then cpra.ven
                 when extract(dow from to_date($1, 'YYYY-MM-DD'))=6 then cpra.sab
                 when extract(dow from to_date($1, 'YYYY-MM-DD'))=7 then cpra.dom
-    end as check_previsto
+    end as check_previsto,
+    e.id_causale, e.punteggio, 
+    e.codice, e.datainsert
     from spazzamento.cons_percorsi_spazz_x_app cpra
+    left join spazzamento.v_effettuati e on e.tappa = cpra.id_tappa_raggr and datalav = to_date($1, 'YYYY-MM-DD')
     where to_date($1, 'YYYY-MM-DD') between data_inizio and data_fine
     and id_percorso = $2  
-    and id_uo = 170) as s1
+    and id_uo = $3) as s1
 order by 6 desc, 1";
 
 
@@ -76,7 +80,7 @@ if (!pg_last_error($conn_hub)){
     $res_ok= $res_ok+1;
 }
 //echo "Sono qua 2";
-$result = pg_execute($conn_hub, "query0", array($_GET['datalav'], $_GET["id"]));  
+$result = pg_execute($conn_hub, "query0", array($_GET['datalav'], $_GET["id"], $_GET["id_uo"]));  
 if (!pg_last_error($conn_hub)){
     #$res_ok=0;
 } else {
