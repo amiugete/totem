@@ -353,15 +353,19 @@ $(function() {
   var opzioni = ['COMPLETATO', 'NON CONSUNTIVATO', 'NON COMPLETATO', 'NON EFFETTUATO'] ;
 
 function nameFormatterStato(value, row, index) {
-  if (value =='COMPLETATO'){
+  if (row.stato_consuntivazione =='COMPLETATO'){
     return '<span style="font-size: 1em; color: green;"> <i title="'+row.stato_consuntivazione+'" class="fa-solid fa-circle"></i></span>';
-  } else if (value =='NON CONSUNTIVATO') {
+  } else if (row.stato_consuntivazione =='NON CONSUNTIVATO' && row.in_previsione ==='PREVISTO') {
     return '<span style="font-size: 1em; color: black;"> <i title="'+row.stato_consuntivazione+'" class="fa-solid fa-circle"></i></span>';
-  } else if (value =='NON EFFETTUATO') {
+  } else if (row.stato_consuntivazione =='NON CONSUNTIVATO' && row.in_previsione ==='NON PREVISTO' ) {
+    return ' ';
+  } else if (row.stato_consuntivazione === 'NON EFFETTUATO') {
     return '<span style="font-size: 1em; color: red;"> <i title="'+row.stato_consuntivazione+'" class="fa-solid fa-circle"></i></span>';
-  } else if (value =='NON COMPLETATO') {
+  } else if (row.stato_consuntivazione === 'NON COMPLETATO') {
     return '<span style="font-size: 1em; color: orange;"> <i title="'+row.stato_consuntivazione+'" class="fa-solid fa-circle"></i></span>';
-  }  
+  }  else {
+    return ' - ';
+  }
 };
 
 
@@ -371,7 +375,7 @@ function nameFormatterPrevisto(value, row, index) {
   if (value =='PREVISTO'){
     return '<span style="font-size: 1em; color: green;"> <i title="'+value+'" class="fa-regular fa-calendar-check"></i></span>';
   } else if (value =='NON PREVISTO') {
-    return ' ';
+    return '<span style="font-size: 1em; color: red;"> <i title="'+value+'" class="fa-regular fa-calendar-xmark"></i></span>';
   }
 };
 

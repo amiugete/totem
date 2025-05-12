@@ -102,8 +102,8 @@ from (
 		) as step0
 	group by descr_servizio, id_percorso, descr_percorso, descr_orario,datalav
 ) as step1
-where (causali is not null or check_previsto > 0) and ($2 = any(id_uo_esec))
-order by 1, 4, 2
+where /*(causali is not null or check_previsto > 0) and */ ($2 = any(id_uo_esec))
+order by 8 desc, 1, 4, 2
             ";
 
 
