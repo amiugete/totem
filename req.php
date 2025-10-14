@@ -1,8 +1,15 @@
 <?php
 
+$controllo=$_GET['operatore'] ?? ''; # altrimenti vuoto 
+//echo $controllo;
+//exit();
 // setcookie funziona solo se non ci sono degli output prima per cui l'ho spostato qua;
-require_once('./check_utente.php');
-
+if ($controllo==''){
+    $controllo=$_POST['consuntivatore'] ?? '';
+    if ($controllo==''){
+        require_once('./check_utente.php');
+    }
+}   
 
 session_start();
 

@@ -51,7 +51,7 @@ $query_upsert = "INSERT INTO spazzamento.effettuati_amiu (
                 datalav, codice, punteggio) 
                 VALUES 
                 ($1, $2, 
-                $3, $4, $5 ) ON CONFLICT (tappa, datalav) 
+                to_date($3, 'DD/MM/YYYY'), $4, $5 ) ON CONFLICT (tappa, datalav) 
                 DO UPDATE  SET 
                 id_causale=$2, 
                 datainsert=now(), 

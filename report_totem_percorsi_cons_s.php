@@ -47,9 +47,76 @@ require_once ('./conn.php');
 
 $id = $_POST['id'];
 $datalav= $_POST['datalav'];
+// cerco la descrizione del percos
+$query_percorso = "select distinct cpsxa.desc_percorso
+from spazzamento.cons_percorsi_spazz_x_app cpsxa 
+where cpsxa.id_percorso = $1
+and to_date($2, 'DD/MM/YYYY') between cpsxa.data_inizio and cpsxa.data_fine";
+
+$result0 = pg_prepare($conn_hub, "query_percorso", $query_percorso);
+
+if (!pg_last_error($conn_hub)){
+    #$res_ok=0;
+} else {
+    echo pg_last_error($conn_hub);
+    #$res_ok= $res_ok+1;
+}
+//echo "Sono qua 2";
+$result0 = pg_execute($conn_hub, "query_percorso", array($id, $datalav));  
+if (!pg_last_error($conn_hub)){
+    #$res_ok=0;
+} else {
+    echo  pg_last_error($conn_hub);
+    #$res_ok= $res_ok+1;
+}
+
+while($r0 = pg_fetch_assoc($result0)) {
+  $desc_percorso =  $r0['desc_percorso'];
+}
+
+
+//echo $_POST['consuntivatore'];
 $consuntivatore= $_POST['consuntivatore'];
 
-$id_uo=str_replace('UT', '', $consuntivatore);
+if (str_starts_with($consuntivatore, 'UT')){
+  //echo 'Inizia con UT';
+  $id_uo = str_replace('UT', '', $consuntivatore);
+} else {
+  //echo 'Non inizia con UT';
+  $id_uo = $_POST['id_uo'];
+
+  
+  // a questo punto cerco l'utente 
+  $query_op = "select concat(COGNOME, ' ', NOME) as op
+from totem.v_personale_ekovision_step1 vpes 
+where vpes.codice_badge = $1";
+
+$result = pg_prepare($conn_hub, "query_op", $query_op);
+
+if (!pg_last_error($conn_hub)){
+    #$res_ok=0;
+} else {
+    echo pg_last_error($conn_hub);
+    #$res_ok= $res_ok+1;
+}
+//echo "Sono qua 2";
+$result = pg_execute($conn_hub, "query_op", array($consuntivatore));  
+if (!pg_last_error($conn_hub)){
+    #$res_ok=0;
+} else {
+    echo pg_last_error($conn_hub);
+    #$res_ok= $res_ok+1;
+}
+
+while($r = pg_fetch_assoc($result)) {
+  $op =  $r['op'];
+}
+ 
+
+
+
+}
+
 
 ?>
 
@@ -65,8 +132,14 @@ $id_uo=str_replace('UT', '', $consuntivatore);
 
 <div id="tabella1">
             
-        <h4>Dettaglio percorso <?php echo $id;?> del <?php echo $datalav;?></h4>
-
+        <h4>Cod: <?php echo $id;?> - Desc: <?php echo $desc_percorso;?></h4> 
+        <small>Data: <?php echo $datalav;?></small>
+        <?php 
+        if ($op){
+          echo '<small>Operatore '.$consuntivatore . ' ('.$op.')</small>'; 
+          }
+        ?>
+    
 
         <script type="text/javascript">
         
@@ -132,6 +205,7 @@ $id_uo=str_replace('UT', '', $consuntivatore);
 
       <hr>
       <div class="row row-cols g-3">
+      <small>Seleziona una causale e la % di completamento da applicare su tratti selezionati</small>
       <div class="col-4 col-auto text-start">
       <select id="causale_tutto"  class="show-tick form-select" data-live-search="true" name="causale" required="">
       <option name="causale" value="">Seleziona la causale</option>
@@ -143,18 +217,18 @@ $id_uo=str_replace('UT', '', $consuntivatore);
 			<option name="causale" value="<?php echo trim($r["id"]);?>"><?php echo $r["descrizione"] ;?></option>
 			<?php } ?>
       </select>
-      <small>Seleziona causale e % da applicare su tratti selezionati</small>
+      
       </div>
       <div class="col-2 text-start">
       <select id="punteggio_tutto" class="show-tick form-select" data-live-search="true"  name="punteggio" required="">
-      <option name="punteggio" value="">% completamento</option>
+      <option name="punteggio" value="">%</option>
       <option name="punteggio" value="100">100</option>
       <option name="punteggio" value="75">75</option>
       <option name="punteggio" value="50">50</option>
       <option name="punteggio" value="25">25</option>
-      <option name="punteggio" value="50">0</option>
+      <option name="punteggio" value="0">0</option>
       </select>
-    
+      
       
       </div>
       <div class="col-3 text-start">
@@ -169,7 +243,7 @@ $id_uo=str_replace('UT', '', $consuntivatore);
       <input type="hidden" id="consuntivatore" name="consuntivatore" value="<?php echo $consuntivatore;?>">
       <div name="conferma2" id="conferma2" class="form-group">
       <button type="submit" id="salva_cons" class="btn btn-primary">
-      <i class="fa-solid fa-plus"></i> Salva consuntivazione
+      <i class="fa-solid fa-floppy-disk"></i> Salva
       </button>
       </div>
       </form>
@@ -224,9 +298,8 @@ $id_uo=str_replace('UT', '', $consuntivatore);
  	  <tr>
         <th data-field="state" data-checkbox="true" data-formatter="stateFormatter"></th>  
         <th data-field="tappa" data-sortable="true" data-visible="false" data-filter-control="input">Tappa</th>
-        <th data-field="nome_via" data-sortable="true" data-visible="true" data-filter-control="input">Via</th>
-        <th data-field="tratto" data-sortable="true" data-visible="true" data-filter-control="input">Nota via</th>
-        <th data-field="check_previsto" data-sortable="true" data-visible="true">Previsto</th>
+        <th data-field="tratto" data-sortable="true" data-visible="true" data-filter-control="input">Tratto</th>
+        <th data-field="check_previsto" data-sortable="true" data-visible="false">Previsto</th>
         <!--th data-field="check_prev_cons" data-sortable="true" data-visible="false">Previsto</th-->
         <th data-field="causale" data-sortable="true" data-visible="true" data-formatter="causaleForm">Causale</th>
         <th data-field="punteggio" data-sortable="true" data-visible="true" data-formatter="punteggioForm">Punteggio</th>
@@ -397,7 +470,8 @@ function rowStyle(row, index) {
   if (row.check_previsto === '1' && (row.id_causale === '100' || (!row.id_causale))) {
     return {
     classes: 'text-wrap previsto fatto',
-    css: {"background-color": "#008000", "font-weight": "bold"}
+    /*css: {"background-color": "#40BF40", "font-weight": "bold"}*/
+    css: {"background-color": "rgba(64, 191, 64, 0.6)", "color":"#ffffff !important"}
     } 
   //  previsto e non fatto 
   } else if (row.check_previsto === '1' && (row.id_causale != '100') ){

@@ -523,7 +523,7 @@ window.consEvents = {
     'click .info#cons': function (e, value, row, index) {
         console.log('Sono qua cons');
         var id = row.id_percorso;
-        var datalav = row.datalav;
+        var datalav = moment(row.datalav).format('DD/MM/YYYY');
         console.log('id = ' +id);
         console.log('datalav = '+datalav);
         $.ajax({   
