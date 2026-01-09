@@ -90,6 +90,8 @@ $name=dirname(__FILE__);
   function utScelta(val) {
     document.getElementById('open_ut').submit();
   }
+
+
 </script>
 
 
@@ -261,6 +263,8 @@ if ($hour < '1120'){
 <!--button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
   Consuntivazione
 </button-->
+
+
 
 
 
@@ -623,11 +627,26 @@ window.consEvents = {
 
 function consFormatter3(value, row, index) {
       if (row.stato_consuntivazione =='NON CONSUNTIVATO' && row.in_previsione == 'PREVISTO') {
-        return [
-          '<button class="info btn btn-danger btn-sm" id="non_eseguito" title="TODO -Rendi non eseguito">',
+        <?php 
+          //echo $role_SIT;
+          if ($role_SIT == 'VIEW') {
+          ?>
+          return [
+          '<button class="info btn btn-danger btn-sm" disabled="" id="non_eseguito" title="Rendi non eseguito">',
           '<i class="fa-solid fa-xmark"></i>',
           '</button>'
         ].join('');
+          <?php
+          } else {
+          ?>
+        return [
+          '<button class="info btn btn-danger btn-sm" id="non_eseguito" title="Rendi non eseguito">',
+          '<i class="fa-solid fa-xmark"></i>',
+          '</button>'
+        ].join('');
+        <?php
+          }
+        ?>
       }
 };
 
@@ -750,6 +769,9 @@ pg_free_result($result1);
 ?>
 
 </div>
+
+
+
 
 <?php 
 require_once('req_bottom.php');
