@@ -1,4 +1,5 @@
 <?php
+session_start();
 
 $controllo=$_GET['operatore'] ?? ''; # altrimenti vuoto 
 //echo $controllo;
@@ -11,7 +12,6 @@ if ($controllo==''){
     }
 }   
 
-session_start();
 
 // parametri iniziali 
 $partenza_ditte_terze="21/10/2024";
@@ -157,6 +157,9 @@ $(function() {
 }
 $problemi =  'contattare l\'<a href="mailto:assterritorio@amiu.genova.it">amministratore di sistema</a>';
 
+
+
+
 function the_page_title()
 {
     $page_name = getcwd(); // getcwd() gets the directory of the file you call the function from
@@ -164,7 +167,21 @@ function the_page_title()
     $len_page_dir = count($each_page_name) -1;
     $temp = explode('_', $each_page_name[$len_page_dir]);
     $len_temp=count($temp)-1;
-    
+    if ($temp[$len_temp]=='totem'){
+        $_SESSION['test']=0;
+    } else if($temp[$len_temp]=='test') {
+        ?>
+        <style>
+            .navbar {
+                background: #ff0000;
+            }
+        </style>
+        <?php
+        $test=1;
+        $_SESSION['test']=1;
+    } else {
+        echo "L'indirizzo è sbagliato. Contattare l'amministratore di sistema assterritorio@amiu.genova.it";
+    }
     return $test;
 }
 

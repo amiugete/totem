@@ -6,7 +6,11 @@ header('Content-Type: application/json; charset=utf-8');
 
 
 
-require_once ('../conn.php');
+if ($_SESSION['test']==1) {
+    require_once ('../conn_test.php');
+} else {
+    require_once ('../conn.php');
+}
 
 
 
@@ -47,7 +51,7 @@ from
     cpra.nome_via, 
     nota_via, 
     concat(cpra.nome_via, ' - ', nota_via) as tratto, 
-    case 
+    /*case 
                 when extract(dow from to_date($1, 'DD/MM/YYYY'))=1 then cpra.lun
                 when extract(dow from to_date($1, 'DD/MM/YYYY'))=2 then cpra.mar
                 when extract(dow from to_date($1, 'DD/MM/YYYY'))=3 then cpra.mer
@@ -55,7 +59,11 @@ from
                 when extract(dow from to_date($1, 'DD/MM/YYYY'))=5 then cpra.ven
                 when extract(dow from to_date($1, 'DD/MM/YYYY'))=6 then cpra.sab
                 when extract(dow from to_date($1, 'DD/MM/YYYY'))=7 then cpra.dom
-    end as check_previsto,
+    end as check_previsto,*/
+    totem.verify_daily_frequency(cod_frequenza_tratto,
+		to_date($1, 'DD/MM/YYYY'),
+		freq_settimane)
+		as check_previsto,
     e.id_causale, e.punteggio, 
     e.codice, e.datainsert
     from spazzamento.cons_percorsi_spazz_x_app cpra

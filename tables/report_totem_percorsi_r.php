@@ -74,47 +74,37 @@ from (
 	string_agg(distinct descr_causale, ',') as causali_text, datalav
 	from (
 		select at2.descr_orario,
-		cpra.desc_servizio as descr_servizio, cpra.id_percorso, cpra. desc_percorso as descr_percorso, 
+		cpra.desc_servizio as descr_servizio, cpra.id_percorso, cpra.desc_percorso as descr_percorso, 
 		cpra.desc_uo, cpra.id_uo as id_uo_esec,
 		--pu.id_uo,
 		case 
-			when (ea.punteggio='100' and trim(replace(ea.causale, ' - (no in questa giornata)', '')) = '') then 'COMPLETATO'
+			when (trim(replace(ea.causale, ' - (no in questa giornata)', '')) = '') then 'COMPLETATO'
 			else trim(replace(ea.causale, ' - (no in questa giornata)', '')) 
 		end as descr_causale
 		,
 		case 
-			when (ea.punteggio='100' and trim(replace(ea.causale, ' - (no in questa giornata)', '')) = '') then '100'
+			when (trim(replace(ea.causale, ' - (no in questa giornata)', '')) = '') then '100'
 			else ct.id::text
 		end as causale,
-		/*case 
-			when extract(dow from to_date($1, 'DD/MM/YYYY'))=1 then cpra.lun
-			when extract(dow from to_date($1, 'DD/MM/YYYY'))=2 then cpra.mar
-			when extract(dow from to_date($1, 'DD/MM/YYYY'))=3 then cpra.mer
-			when extract(dow from to_date($1, 'DD/MM/YYYY'))=4 then cpra.gio
-			when extract(dow from to_date($1, 'DD/MM/YYYY'))=5 then cpra.ven
-			when extract(dow from to_date($1, 'DD/MM/YYYY'))=6 then cpra.sab
-			when extract(dow from to_date($1, 'DD/MM/YYYY'))=7 then cpra.dom
-		end as check_previsto, */
 		totem.verify_daily_frequency(cod_frequenza_tratto,
 		to_date($1, 'DD/MM/YYYY'),
 		freq_settimane)
 		as check_previsto,	
 		coalesce(ea.datalav, to_date($1, 'DD/MM/YYYY')) as datalav
-		from spazzamento.cons_percorsi_spazz_x_app cpra
-		left join spazzamento.tappe_turni tt on tt.id_tappa_raggr = cpra.id_tappa_raggr
-		left join raccolta.anagr_turni at2 on at2.id_turno = tt.id_turno
+		from raccolta.cons_percorsi_raccolta_amiu cpra
+		left join raccolta.anagr_turni at2 on at2.id_turno = cpra.id_turno
 		--left join raccolta.tipi_rifiuto tr on tr.nome= cpra.tipo_rifiuto 
 		--left join spazzamento.aste_ut pu on pu.id_asta=cpra.id_asta
-		left join spazzamento.v_effettuati ea on ea.tappa::bigint = cpra.id_tappa_raggr::bigint 
+		left join raccolta.v_effettuati ea on ea.tappa::bigint = cpra.id_tappa::bigint 
 											and ea.datalav = to_date($1, 'DD/MM/YYYY')
-		left join spazzamento.causali_testi ct on trim(ct.descrizione) = trim(ea.causale)
+		left join raccolta.causali_testi ct on trim(ct.descrizione) = trim(ea.causale)
 		where (to_date($1, 'DD/MM/YYYY') between cpra.data_inizio and (cpra.data_fine - interval '1' day))
 		) as step0
 	group by descr_servizio, id_percorso, descr_percorso, descr_orario,datalav
 ) as step1
 where /*(causali is not null or check_previsto > 0) and */ 
 ($2 = any(id_uo_esec))
-order by 8 desc, 1, 4, 2
+order by 8 desc, 1, 2, 4
             ";
 
 

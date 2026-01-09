@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 
 if ($_SESSION['test']==1) {
@@ -17,7 +18,7 @@ if (!$data) {
 }
 
 $query_ut = "SELECT DISTINCT id_uo, desc_uo
-             FROM spazzamento.cons_percorsi_spazz_x_app
+             FROM raccolta.cons_percorsi_raccolta_amiu
              WHERE to_date($1, 'DD/MM/YYYY') BETWEEN data_inizio AND data_fine
              ORDER BY desc_uo";
 

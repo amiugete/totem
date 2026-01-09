@@ -4,9 +4,9 @@ session_start();
 
 
 if ($_SESSION['test']==1) {
-    require_once ('../conn_test.php');
+    require_once('../conn_test.php');
 } else {
-    require_once ('../conn.php');
+    require_once('../conn.php');
 }
 
 $cons_tappe=$_POST['cons_tappe'];
@@ -28,13 +28,8 @@ while ($i < (count($tappe_consuntivate)-1)) {
         die;
     }
     if (
-        (trim(explode('-', $tappe_consuntivate[$i])[1])=='100' and trim(explode('-', $tappe_consuntivate[$i])[2])!='100') 
-        OR
-        (trim(explode('-', $tappe_consuntivate[$i])[1])!='100' and trim(explode('-', $tappe_consuntivate[$i])[2])=='100')
-        )   {
-        echo '<h5><font color="red">ERRORE: causale e punteggio della tappa '.trim(explode('-', $tappe_consuntivate[$i])[0]).
-        ' non sono congruenti. </font>
-        <br> Per visualizzare il numero delle tappe puoi cliccare sul tasto più a destra qua sotto.</h5>';
+        (trim(explode('-', $tappe_consuntivate[$i])[1])=='100' and trim(explode('-', $tappe_consuntivate[$i])[2])=='0') )   {
+        echo '<div class="alert alert-danger" role="alert"> ERRORE: causale e num_contenitori  di qualche tappa non sono congruenti.</div>';
         die;
     }
     $i++;
@@ -49,19 +44,21 @@ $datalav=$_POST['datalav'];
 $consuntivatore=$_POST['consuntivatore'];
 //echo $datalav.'<br>';
 
+#exit();
 
-$query_upsert = "INSERT INTO spazzamento.effettuati_amiu (
-                id, tappa, id_causale, 
-                datalav, codice, punteggio) 
+$query_upsert = "INSERT INTO raccolta.effettuati_amiu (
+                /*id,*/ tappa, id_causale, datainsert,
+                datalav, codice, fatto) 
                 VALUES 
-                ((select max(id) from spazzamento.effettuati_amiu) + 1,
-                $1, $2, 
-                to_date($3, 'DD/MM/YYYY'), $4, $5 ) ON CONFLICT (tappa, datalav, codice) 
+                (/*(select max(id) from raccolta.effettuati_amiu) + 1),*/
+                $1, $2, now(),
+                to_date($3, 'DD/MM/YYYY'), $4, $5 ) 
+                ON CONFLICT (tappa, datalav, codice) 
                 DO UPDATE SET 
                 id=EXCLUDED.id,
                 id_causale=EXCLUDED.id_causale, 
                 datainsert=now(),  
-                punteggio=EXCLUDED.punteggio;";
+                fatto=EXCLUDED.fatto;";
 
 
 $result1 = pg_prepare($conn_hub, "query_upsert", $query_upsert);

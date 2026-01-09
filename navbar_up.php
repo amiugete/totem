@@ -2,9 +2,45 @@
 session_start();
 //require_once('./check_utente.php');
 
-// Faccio il controllo su SIT
+if ($_SESSION['test']==1) {
+    require_once('./conn_test.php');
+} else {
+    require_once('./conn.php');
+}
 
+// Faccio il controllo su SIT (sempre produzione non test)
 
+$query_role="SELECT  su.id_user, sr.id_role, sr.\"name\" as \"role\",
+coalesce(suse.esternalizzati, 'f') as esternalizzati, 
+coalesce(suse.sovrariempimenti, 'f') as sovrariempimenti, 
+coalesce(suse.sovrariempimenti_admin, 'f') as sovrariempimenti_admin, 
+coalesce(suse.coge, 'f') as coge,
+coalesce(suse.utenze, 'f') as utenze
+FROM util.sys_users su
+join util.sys_roles sr on sr.id_role = su.id_role  
+left join etl.sys_users_addons suse on suse.id_user = su.id_user 
+where su.\"name\" ilike $1 and su.id_user>0;";
+$result_n = pg_prepare($conn, "my_query_navbar1", $query_role);
+if (pg_last_error($conn)){
+    echo pg_last_error($conn);
+}
+$result_n = pg_execute($conn, "my_query_navbar1", array($_SESSION['username']));
+if (pg_last_error($conn)){
+    echo pg_last_error($conn);
+}
+$check_SIT=0;
+while($r = pg_fetch_assoc($result_n)) {
+  $role_SIT=$r['role'];
+  $id_role_SIT=(int)$r['id_role'];
+  //$id_user_SIT=$r['id_user'];
+  $_SESSION['id_user']=$r['id_user'];
+  $check_esternalizzati=$r['esternalizzati'];
+  $check_sovr=$r['sovrariempimenti'];
+  $check_sovr_admin=$r['sovrariempimenti_admin'];
+  $check_coge=$r['coge'];
+  $check_utenze=$r['utenze'];
+  $check_SIT=1;
+}
 
 $check_SIT=1;
 
@@ -32,15 +68,15 @@ $ruoli_edit=array('UT', 'IT', 'ADMIN', 'SUPERUSER');
 $ruoli_superedit=array('IT','ADMIN', 'SUPERUSER');
 
 if (in_array($role_SIT, $ruoli_edit_piazzola)) {
-  $check_edit_piazzola=1;
+  $check_edit_piazzola=1  ?? 0;
 }
 
 if (in_array($role_SIT, $ruoli_edit)) {
-  $check_edit=1;
+  $check_edit=1 ?? 0;
 }
 
 if (in_array($role_SIT, $ruoli_superedit)) {
-  $check_superedit=1;
+  $check_superedit=1 ?? 0;
 }
 
 
@@ -84,12 +120,23 @@ if ($check_modal!=1){
           Consuntivazioni
           </a>
           <div class="dropdown-menu" id="navbarDropdown1" aria-labelledby="navbarDropdown1">
-            <a class="dropdown-item" href="./backoffice_spazz_ext.php">Spazzamento / lavaggio</a>
+            <a class="dropdown-item" href="./backoffice_racc_ext.php">Raccolta</a>
+            <a class="dropdown-item" href="./backoffice_spazz_ext.php">Igiene (Spazzamento / lavaggio / aree verdi, etc)</a>         
           </div>
         </li>
         <?php } ?>
-        
-        
+        <?php if ($check_superedit > 0) { ?>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="navbarDropdown1">
+          Pagine totem (per soli amministratori)
+          </a>
+          <div class="dropdown-menu" id="navbarDropdown1" aria-labelledby="navbarDropdown1">
+            <a class="dropdown-item" target="_blank" href="./consuntivazione_raccolta.php?operatore=9999">Totem raccolta</a>
+            <a class="dropdown-item" target="_blank" href="./consuntivazione_spazzamento.php?operatore=9999">Totem spazzamento</a> 
+            <a class="dropdown-item" target="_blank" href="./selezione_servizi.php?operatore=9999">Selezione servizi</a>        
+          </div>
+        </li>
+        <?php } ?>
         
       </ul>
       
@@ -112,10 +159,15 @@ if ($check_modal!=1){
             <li><b>Profilo: </b></li>
             <li><b>UT/Rimesse: </b></li>
             <hr>
-            
+            <li><b>Check ruolo SIT:</b><?php echo $role_SIT; ?></li>
+            <li><b>Check superedit: </b><?php echo $check_superedit; ?></li>
           </ul>
         <hr>
-          In caso di modifiche fare scrivere dal proprio responsabile a assterritorio@amiu.genova.it    
+          In caso di modifiche fare scrivere dal proprio responsabile a assterritorio@amiu.genova.it 
+        <hr>
+          <a class="dropdown-item" href="./logout.php">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </a>   
         </div>
 
 
@@ -131,16 +183,9 @@ if ($_SESSION['test']==1) {
 
 $conto_underscore=count(explode("_", basename($_SERVER['PHP_SELF'])));
 
-  //if (count(explode("_", basename($_SERVER['PHP_SELF'])))> 1) { 
-    if (explode("_", basename($_SERVER['PHP_SELF']))[$conto_underscore-1] == 'sovr.php'){ 
-      ?>
+  ?>
       <h4><i class="fa-solid fa-triangle-exclamation"></i> Ambiente di TEST!</h4>
-      <?php
-    } else {
-      ?>
-      <h4><i class="fa-solid fa-triangle-exclamation"></i> Ambiente di TEST ma dati in esercizio!</h4>
-      <?php
-    }
+  <?php
   /*} else {
 
 ?>

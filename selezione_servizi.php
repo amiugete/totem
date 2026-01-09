@@ -39,7 +39,7 @@ $badge=$_GET['operatore'] ?? ''; # altrimenti vuoto
 <style>
   
   body {
-      background-color: #b3d7b3 !important; 
+      background-color: bisque !important;; 
       /*background:linear-gradient(to left, #A9A9A9, #8FBC8F);*/
     }
 
@@ -136,11 +136,11 @@ if (pg_last_error($conn_hub)){
       
     <?php 
     
-       $consuntivatore = $badge;
+    $consuntivatore = $badge;
     require_once('selezione_operatore.php');
 
     echo 'Operatore con badge '. $badge . ' ('.$op.')';
-
+   
     if ($desc_last_uo) {
       echo '<br><small>Ultima consuntivazione su '. $desc_last_uo.'</small>';
     } else {
@@ -200,9 +200,26 @@ if (pg_last_error($conn_hub)){
   </div>
 </div>
 
+
+
 <div class="row justify-content-md-center">
 <div class="form-group col-md-6">
-    <label for="servizio" class="form-label">Servizio di igiene (spazzamento/lavaggio)</label>
+    <label for="tipo_servizio" class="form-label">Tipo servizio </label>
+    
+    <select class="selectpicker show-tick form-control"
+        data-live-search="true"
+        onchange="cambiato_tipo(this.value);"
+        name="tipo_servizio"
+        id="tipo_servizio"
+        required>
+</select>
+  </div>
+</div>
+
+
+<div class="row justify-content-md-center">
+<div class="form-group col-md-6">
+    <label for="servizio" class="form-label">Servizio </label>
     
     <select class="selectpicker show-tick form-control"
         data-live-search="true"
@@ -307,7 +324,7 @@ function ensureSelectpicker(selector) {
     let data_percorsi = $('#js-date3').val();
     console.log(data_percorsi);
     $.ajax({
-        url: './backoffice/ut_combo_ajax_spazz.php',
+        url: './backoffice/ut_combo_ajax_serv.php',
         method: 'GET',
         data: {"last_uo": last_uo, "data_percorsi": data_percorsi },
         success: function(response) {
@@ -332,9 +349,39 @@ function ensureSelectpicker(selector) {
     let data_percorsi = $('#js-date3').val();
     console.log('Data '+data_percorsi);
     $.ajax({
-        url: './backoffice/servizio_combo_ajax_spazz.php',
+        url: './backoffice/tipo_servizio_combo_ajax_serv.php',
         method: 'GET',
         data: { "data_percorsi": data_percorsi , "ut": ut },
+        success: function(response) {
+          $('#tipo_servizio').selectpicker('destroy'); // 💣 elimina istanza esistente
+          $('#tipo_servizio').empty();                 // 🧹 svuota opzioni
+          $('#tipo_servizio').append(response);        // ➕ aggiungi nuove
+          $('#tipo_servizio').selectpicker('render');  // 🔁 renderizza di nuovo
+          $('#servizio').empty();                 // 🧹 svuota opzioni
+          $('#percorsi').empty();                 // 🧹 svuota opzioni
+        },
+        error: function(xhr, status, error) {
+            console.error("Errore AJAX:", error);
+             $('#servizio').empty().append('<option value="0">Errore</option>').selectpicker('refresh');
+        }
+    });
+
+  };
+
+
+
+
+  function cambiato_tipo(val) {
+    let ut = $('#ut0').val();
+    console.log('Ut ' + ut);
+    let data_percorsi = $('#js-date3').val();
+    console.log('Data '+data_percorsi);
+    let tipo = $('#tipo_servizio').val();
+    console.log('Tipo '+tipo);
+    $.ajax({
+        url: './backoffice/servizio_combo_ajax_serv.php',
+        method: 'GET',
+        data: { "data_percorsi": data_percorsi , "ut": ut, "tipo": tipo },
         success: function(response) {
           $('#servizio').selectpicker('destroy'); // 💣 elimina istanza esistente
           $('#servizio').empty();                 // 🧹 svuota opzioni
@@ -351,7 +398,6 @@ function ensureSelectpicker(selector) {
   };
 
 
-
   function cambiato_servizio(val) {
     let data_percorsi = $('#js-date3').val();
     console.log(data_percorsi);
@@ -360,7 +406,7 @@ function ensureSelectpicker(selector) {
     let servizio = $('#servizio').val();
     console.log(servizio);
     $.ajax({
-        url: './backoffice/percorsi_ajax_spazz.php',
+        url: './backoffice/percorsi_ajax_serv.php',
         method: 'GET',
         data: { data_percorsi: data_percorsi, ut: ut, servizio: servizio },
         success: function(response) {
@@ -391,7 +437,7 @@ function ensureSelectpicker(selector) {
     console.log('id_uo='+ut);
         $.ajax({   
             type: "POST",
-            url: "report_totem_percorsi_cons_s.php",
+            url: "report_totem_percorsi_serv.php",
             data: 'id=' + id_percorso + '&datalav='+data_percorsi +'&consuntivatore='+operatore+'&id_uo='+ut+'',
             dataType: "text",                  
             success: function(response){                   

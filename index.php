@@ -48,8 +48,13 @@ require_once('./req.php');
 
 the_page_title();
 
+echo $test;
 
-require_once ('./conn.php');
+if ($_SESSION['test']==1) {
+    require_once ('./conn_test.php');
+} else {
+    require_once ('./conn.php');
+}
 
 
 
@@ -88,11 +93,22 @@ $name=dirname(__FILE__);
 <div class="container text-center">
 
   <div class="row">
+
+
+    <div class="col">
+      <a type="button" class="btn btn-primary" href="./backoffice_racc_ext.php">
+        <i class="fa-solid fa-trash"></i> Consuntivazione raccolta
+      </a>
+    </div>
+
+
     <div class="col">
       <a type="button" class="btn btn-primary" href="./backoffice_spazz_ext.php">
         <i class="fa-solid fa-broom"></i> Consuntivazione spazzamento/lavaggio
       </a>
     </div>
+
+
   </div>
   <!--hr>
   <div class="row">

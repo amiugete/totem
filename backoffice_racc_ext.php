@@ -216,7 +216,7 @@ if ($hour < '1120'){
     $("#nota_data").html("").fadeIn("slow");
     $(function() {    // Faccio refres della data-url
     $table.bootstrapTable('refresh', {
-      url: "./tables/report_totem_percorsi_s.php?uos="+uos+"&d="+data_percorsi
+      url: "./tables/report_totem_percorsi_r.php?uos="+uos+"&d="+data_percorsi
     }); 
 
   });
@@ -255,7 +255,7 @@ if ($hour < '1120'){
 
 <div id="tabella">
             
-        <h4>Report consuntivazione spazzamento da totem - <?php echo $uos_descrizione;?></h4>
+        <h4>Report consuntivazione raccolta da totem - <?php echo $uos_descrizione;?></h4>
 
         <!-- Button trigger modal -->
 <!--button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
@@ -271,7 +271,7 @@ if ($hour < '1120'){
       <select id="causale_tutto_ne"  class="show-tick form-select" data-live-search="true" name="causale_tutto_ne" required="">
       <option name="causale" value="">Seleziona la causale</option>
       <?php 
-      $query="select id, descrizione from spazzamento.causali_testi ct  where descrizione not like 'TERMINATO SENZA DISSERVIZI' order by 2";
+      $query="select id, descrizione from raccolta.causali_testi ct  where descrizione not like 'TERMINATO SENZA DISSERVIZI' order by 2";
       $result = pg_query($conn_hub, $query);
       while($r = pg_fetch_assoc($result)) {
         ?>
@@ -314,7 +314,7 @@ if ($hour < '1120'){
         data-sort-select-options = "true"
         data-filter-control-multiple-search="false" 
         data-export-data-type="all"
-        data-url="./tables/report_totem_percorsi_s.php?uos=<?php echo $uos?>&d=<?php echo $today->format('d/m/Y');?>&c=none" 
+        data-url="./tables/report_totem_percorsi_r.php?uos=<?php echo $uos?>&d=<?php echo $today->format('d/m/Y');?>&c=none" 
         data-toolbar="#toolbar" 
         data-show-footer="false"
         >
@@ -565,7 +565,7 @@ window.consEvents = {
         console.log('datalav = '+datalav);
         $.ajax({   
             type: "POST",
-            url: "report_totem_percorsi_cons_s.php",
+            url: "report_totem_percorsi_cons_r.php",
             data: 'id=' + id + '&datalav='+datalav +'&consuntivatore=UT'+<?php echo $uos;?>+'',
             dataType: "text",                  
             success: function(response){                    
@@ -624,7 +624,7 @@ window.consEvents = {
 function consFormatter3(value, row, index) {
       if (row.stato_consuntivazione =='NON CONSUNTIVATO' && row.in_previsione == 'PREVISTO') {
         return [
-          '<button class="info btn btn-danger btn-sm"  id="non_eseguito" title="Rendi non eseguito">',
+          '<button class="info btn btn-danger btn-sm" id="non_eseguito" title="TODO -Rendi non eseguito">',
           '<i class="fa-solid fa-xmark"></i>',
           '</button>'
         ].join('');
@@ -650,12 +650,12 @@ window.consEvents3 = {
 
         $.ajax({   
             type: "POST",
-            url: "backoffice/non_eseguito_spazz.php",
+            url: "backoffice/non_eseguito_racc.php",
             data: 'id=' + id + '&datalav='+datalav + '&causale='+causale +'&consuntivatore=UT'+<?php echo $uos;?>+'',
             dataType: "text",                  
             success: function(response){                    
                 $table.bootstrapTable('refresh', {
-                url: "./tables/report_totem_percorsi_s.php?uos="+<?php echo $uos;?>+"&d="+datalav
+                url: "./tables/report_totem_percorsi_r.php?uos="+<?php echo $uos;?>+"&d="+datalav
                 
             });
             console.log('refresh tabella fatto');

@@ -39,7 +39,7 @@ $badge=$_GET['operatore'] ?? ''; # altrimenti vuoto
 <style>
   
   body {
-      background-color: #b3d7b3 !important; 
+      background-color: cornflowerblue !important;; 
       /*background:linear-gradient(to left, #A9A9A9, #8FBC8F);*/
     }
 
@@ -135,12 +135,10 @@ if (pg_last_error($conn_hub)){
     <div class="col text-center">
       
     <?php 
-    
-       $consuntivatore = $badge;
+    $consuntivatore = $badge;
     require_once('selezione_operatore.php');
 
     echo 'Operatore con badge '. $badge . ' ('.$op.')';
-
     if ($desc_last_uo) {
       echo '<br><small>Ultima consuntivazione su '. $desc_last_uo.'</small>';
     } else {
@@ -202,7 +200,7 @@ if (pg_last_error($conn_hub)){
 
 <div class="row justify-content-md-center">
 <div class="form-group col-md-6">
-    <label for="servizio" class="form-label">Servizio di igiene (spazzamento/lavaggio)</label>
+    <label for="servizio" class="form-label">Servizio di raccolta</label>
     
     <select class="selectpicker show-tick form-control"
         data-live-search="true"
@@ -307,7 +305,7 @@ function ensureSelectpicker(selector) {
     let data_percorsi = $('#js-date3').val();
     console.log(data_percorsi);
     $.ajax({
-        url: './backoffice/ut_combo_ajax_spazz.php',
+        url: './backoffice/ut_combo_ajax_racc.php',
         method: 'GET',
         data: {"last_uo": last_uo, "data_percorsi": data_percorsi },
         success: function(response) {
@@ -332,7 +330,7 @@ function ensureSelectpicker(selector) {
     let data_percorsi = $('#js-date3').val();
     console.log('Data '+data_percorsi);
     $.ajax({
-        url: './backoffice/servizio_combo_ajax_spazz.php',
+        url: './backoffice/servizio_combo_ajax_racc.php',
         method: 'GET',
         data: { "data_percorsi": data_percorsi , "ut": ut },
         success: function(response) {
@@ -360,7 +358,7 @@ function ensureSelectpicker(selector) {
     let servizio = $('#servizio').val();
     console.log(servizio);
     $.ajax({
-        url: './backoffice/percorsi_ajax_spazz.php',
+        url: './backoffice/percorsi_ajax_racc.php',
         method: 'GET',
         data: { data_percorsi: data_percorsi, ut: ut, servizio: servizio },
         success: function(response) {
@@ -391,7 +389,7 @@ function ensureSelectpicker(selector) {
     console.log('id_uo='+ut);
         $.ajax({   
             type: "POST",
-            url: "report_totem_percorsi_cons_s.php",
+            url: "report_totem_percorsi_cons_r.php",
             data: 'id=' + id_percorso + '&datalav='+data_percorsi +'&consuntivatore='+operatore+'&id_uo='+ut+'',
             dataType: "text",                  
             success: function(response){                   

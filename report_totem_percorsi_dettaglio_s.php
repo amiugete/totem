@@ -22,7 +22,11 @@ require_once('./req.php');
 //the_page_title();
 
 
-require_once ('./conn.php');
+if ($_SESSION['test']==1) {
+    require_once ('./conn_test.php');
+} else {
+    require_once ('./conn.php');
+}
 
 
 

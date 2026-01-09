@@ -1,9 +1,9 @@
 <?php
 session_start();
 if ($_SESSION['test']==1) {
-    require('../conn_test.php');
+    require_once ('../conn_test.php');
 } else {
-    require('../conn.php');
+    require_once ('../conn.php');
 }
 
 $data = $_GET['data_percorsi'];
@@ -15,16 +15,17 @@ if (!$data) {
     exit;
 }
 
-$query_percorsi = "SELECT DISTINCT id_percorso, desc_percorso, 
-              totem.verify_daily_frequency(
-              cpsxa.cod_frequenza_percorso, 
-              to_date($1, 'DD/MM/YYYY'),
-              cpsxa.freq_settimane) as previsto 
-              FROM spazzamento.cons_percorsi_spazz_x_app cpsxa
-              WHERE cpsxa.id_uo = $2
-              AND cpsxa.id_servizio = $3
-              AND to_date($4, 'DD/MM/YYYY') between cpsxa.data_inizio and cpsxa.data_fine
-              order by 3 desc, 2";
+$query_percorsi = "SELECT DISTINCT id_percorso, descrizione as desc_percorso, 
+  totem.verify_daily_frequency(
+  spe.id_frequenza, 
+  to_date($1, 'DD/MM/YYYY'),
+  coalesce(spe.freq_settimane,'T')) as previsto 
+ from servizi.servizi_per_ekovision spe 
+left join servizi.mail_ut mu on mu.id_ut_sit = spe.id_uo_sit 
+  WHERE mu.id_uo = $2::int
+  AND spe.id_tipo::int = $3
+  AND to_date($4, 'DD/MM/YYYY') between spe.data_inizio_validita and spe.data_fine_validita
+  order by 3 desc, 2";
 
 $result = pg_prepare($conn_hub, "query_percorsi", $query_percorsi);
 if (pg_last_error($conn_hub)){

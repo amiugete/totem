@@ -37,16 +37,17 @@ if(!$conn_hub) {
 } else {
  
     
-$query0="select e.tappa, cpsxa.nome_via, cpsxa.nota_via as tratto,
-e.punteggio,
+$query0="select e.tappa, cpsxa.nome_via, 
+cpsxa.civico,
+cpsxa.utente_posizione as riferimento,
 ct.descrizione as causale,
 case 
 	when vpes.cognome is not null then concat(vpes.matricola, ' - ', vpes.cognome,' ', vpes.nome)
 	else e.codice
 end as operatore
-from spazzamento.effettuati e
-join spazzamento.causali_testi ct on ct.id = e.id_causale 
-join spazzamento.cons_percorsi_spazz_x_app cpsxa on cpsxa.id_tappa_raggr = e.tappa 
+from raccolta.v_effettuati e
+join raccolta.causali_testi ct on ct.id::int = e.id_causale 
+join raccolta.cons_percorsi_raccolta_amiu cpsxa on cpsxa.id_tappa::bigint = e.tappa::bigint 
 left join totem.v_personale_ekovision_step1 vpes on vpes.codice_badge::text = e.codice 
 where cpsxa.id_percorso  = $1 
 and datalav = to_date($2, 'YYYY-MM-DD')

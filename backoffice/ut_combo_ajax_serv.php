@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+
 if ($_SESSION['test']==1) {
     require('../conn_test.php');
 } else {
@@ -16,14 +17,27 @@ if (!$data) {
     exit;
 }
 
-$query_ut = "SELECT DISTINCT id_uo, desc_uo
-             FROM spazzamento.cons_percorsi_spazz_x_app
-             WHERE to_date($1, 'DD/MM/YYYY') BETWEEN data_inizio AND data_fine
-             ORDER BY desc_uo";
+$query_ut = "with selezione_ut as (
+SELECT spe.id_uo_sit, spe.desc_ut 
+ FROM servizi.servizi_per_ekovision spe
+ WHERE to_date($1, 'DD/MM/YYYY') BETWEEN spe.data_inizio_validita  AND spe.data_fine_validita 
+ and id_zona in (1,2,3,5, 6)
+ union 
+SELECT spe.id_rimessa_sit as id_uo_sit, spe.desc_rimessa as desc_ut 
+ FROM servizi.servizi_per_ekovision spe
+ WHERE to_date($1, 'DD/MM/YYYY') BETWEEN spe.data_inizio_validita  AND spe.data_fine_validita 
+ and id_zona in (1,2,3,5, 6) 
+ and spe.id_rimessa_sit is not null
+) 
+select distinct mu.id_uo, desc_ut as desc_uo
+from selezione_ut su
+left join servizi.mail_ut mu on mu.id_ut_sit = su.id_uo_sit  
+ORDER BY 2";
 
 $result = pg_prepare($conn_hub, "combo_query", $query_ut);
 if (pg_last_error($conn_hub)){
   echo pg_last_error($conn_hub);
+  die();
 }
 $result = pg_execute($conn_hub, "combo_query", array($data));
 if (pg_last_error($conn_hub)){

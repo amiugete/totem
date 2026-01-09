@@ -1,9 +1,9 @@
 <?php
 session_start();
 if ($_SESSION['test']==1) {
-    require('../conn_test.php');
+    require_once ('../conn_test.php');
 } else {
-    require('../conn.php');
+    require_once ('../conn.php');
 }
 
 $data = $_GET['data_percorsi'];
@@ -20,7 +20,7 @@ $query_percorsi = "SELECT DISTINCT id_percorso, desc_percorso,
               cpsxa.cod_frequenza_percorso, 
               to_date($1, 'DD/MM/YYYY'),
               cpsxa.freq_settimane) as previsto 
-              FROM spazzamento.cons_percorsi_spazz_x_app cpsxa
+              FROM raccolta.cons_percorsi_raccolta_amiu cpsxa
               WHERE cpsxa.id_uo = $2
               AND cpsxa.id_servizio = $3
               AND to_date($4, 'DD/MM/YYYY') between cpsxa.data_inizio and cpsxa.data_fine

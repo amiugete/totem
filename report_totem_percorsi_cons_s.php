@@ -17,12 +17,19 @@ session_start();
 
     <title>Gestione servizi</title>
 <?php 
+
+$check_modal=1;
+
 require_once('./req.php');
 
-//the_page_title();
+the_page_title();
 
 
-require_once ('./conn.php');
+if ($_SESSION['test']==1) {
+    require_once ('./conn_test.php');
+} else {
+    require_once ('./conn.php');
+}
 
 
 
@@ -86,27 +93,8 @@ if (str_starts_with($consuntivatore, 'UT')){
   $id_uo = $_POST['id_uo'];
 
   
-  // a questo punto cerco l'utente 
-  $query_op = "select concat(COGNOME, ' ', NOME) as op
-from totem.v_personale_ekovision_step1 vpes 
-where vpes.codice_badge = $1";
+  include('selezione_operatore.php');
 
-$result = pg_prepare($conn_hub, "query_op", $query_op);
-
-if (!pg_last_error($conn_hub)){
-    #$res_ok=0;
-} else {
-    echo pg_last_error($conn_hub);
-    #$res_ok= $res_ok+1;
-}
-//echo "Sono qua 2";
-$result = pg_execute($conn_hub, "query_op", array($consuntivatore));  
-if (!pg_last_error($conn_hub)){
-    #$res_ok=0;
-} else {
-    echo pg_last_error($conn_hub);
-    #$res_ok= $res_ok+1;
-}
 
 while($r = pg_fetch_assoc($result)) {
   $op =  $r['op'];
@@ -137,7 +125,13 @@ while($r = pg_fetch_assoc($result)) {
         <?php 
         if ($op){
           echo '<small>Operatore '.$consuntivatore . ' ('.$op.')</small>'; 
+        } else{
+          echo ' <small>Sono su backoffice come '.$consuntivatore.'</small> ';
+          if ($_SESSION['test']==1) {
+            echo ' <small>Ambiente di test</small> ';
           }
+        }
+
         ?>
     
 
@@ -185,7 +179,7 @@ while($r = pg_fetch_assoc($result)) {
                   });
                   console.log('provo refresh pagina');
                   $(function() {    // Faccio refresh della data-url
-                    $table1.bootstrapTable('refresh', {
+                    $table_tappe.bootstrapTable('refresh', {
                       url: "./tables/report_totem_percorsi_cons_s.php?id=<?php echo $id;?>&datalav=<?php echo $datalav;?>&id_uo=<?php echo $id_uo;?>"
                     }); 
                   });
@@ -207,26 +201,26 @@ while($r = pg_fetch_assoc($result)) {
       <div class="row row-cols g-3">
       <small>Seleziona una causale e la % di completamento da applicare su tratti selezionati</small>
       <div class="col-4 col-auto text-start">
-      <select id="causale_tutto"  class="show-tick form-select" data-live-search="true" name="causale" required="">
-      <option name="causale" value="">Seleziona la causale</option>
+      <select id="causale_tutto"  class="show-tick form-select" data-live-search="true" name="causale_tutto" required="">
+      <option name="causale_tutto" value="">Seleziona la causale</option>
       <?php 
       $query="select id, descrizione from spazzamento.causali_testi ct  where descrizione not like 'TERMINATO SENZA DISSERVIZI' order by 2";
       $result = pg_query($conn_hub, $query);
       while($r = pg_fetch_assoc($result)) {
         ?>
-			<option name="causale" value="<?php echo trim($r["id"]);?>"><?php echo $r["descrizione"] ;?></option>
+			<option name="causale_tutto" value="<?php echo trim($r["id"]);?>"><?php echo $r["descrizione"] ;?></option>
 			<?php } ?>
       </select>
       
       </div>
       <div class="col-2 text-start">
-      <select id="punteggio_tutto" class="show-tick form-select" data-live-search="true"  name="punteggio" required="">
-      <option name="punteggio" value="">%</option>
-      <option name="punteggio" value="100">100</option>
-      <option name="punteggio" value="75">75</option>
-      <option name="punteggio" value="50">50</option>
-      <option name="punteggio" value="25">25</option>
-      <option name="punteggio" value="0">0</option>
+      <select id="punteggio_tutto" class="show-tick form-select" data-live-search="true"  name="punteggio_tutto" required="">
+      <option name="punteggio_tutto" value="">%</option>
+      <option name="punteggio_tutto" value="100">100</option>
+      <option name="punteggio_tutto" value="75">75</option>
+      <option name="punteggio_tutto" value="50">50</option>
+      <option name="punteggio_tutto" value="25">25</option>
+      <option name="punteggio_tutto" value="0">0</option>
       </select>
       
       
@@ -319,14 +313,14 @@ while($r = pg_fetch_assoc($result)) {
 
 
 
-var $table1 = $('#totem_percorsi_dettaglio_s');
+var $table_tappe = $('#totem_percorsi_dettaglio_s');
 
 $(function() {
-    $table1.bootstrapTable();
+    $table_tappe.bootstrapTable();
 });
 
 
-$table1.on('check.bs.table', function (e, row) {
+$table_tappe.on('check.bs.table', function (e, row) {
   console.log('Tappa '+ row.tappa+ ' selezionata');
   //console.log(e);
   $('#punteggio_'+row.tappa+'').removeAttr('disabled');
@@ -334,7 +328,7 @@ $table1.on('check.bs.table', function (e, row) {
   
 });
 
-$table1.on('uncheck.bs.table', function (e, row) {
+$table_tappe.on('uncheck.bs.table', function (e, row) {
   console.log('Tappa: '+ row.tappa+ ' rimossa');
   //console.log(e);
   //$('#insert_'+row.tappa+' option:selected').find($('option')).
@@ -348,8 +342,8 @@ $table1.on('uncheck.bs.table', function (e, row) {
 
 
 //dopo aver caricato la tabella chiamo questa funzione
-$table1.on('post-body.bs.table', function (e, row) {
-//$table1.on('load-success.bs.table', function (e, row) {
+$table_tappe.on('post-body.bs.table', function (e, row) {
+//$table_tappe.on('load-success.bs.table', function (e, row) {
   //console.log('caricata la tabella');
   select_causale();
 });
@@ -358,34 +352,35 @@ $table1.on('post-body.bs.table', function (e, row) {
 
 
 function updateAll() {
-    var causale = $('select#causale_tutto').find(":selected").val();  
-    console.log(causale);
+  console.log('Sono nella funzione updateAll')
+    var causale_all = $('select#causale_tutto').find(":selected").val();  
+    console.log('Causale '+causale_all);
     //controlli su causali e punteggio
-    if (!causale){
-      $("#ConsOutput").html('<div class="alert alert-danger" role="alert">Selezionare una causale</div>').fadeIn("slow");
+    if (!causale_all){
+      $("#ConsOutput").html('<br><div class="alert alert-danger alert-animated" role="alert"><i class="bi bi-exclamation-triangle-fill"></i>Selezionare una causale</div>').fadeIn("slow");
       return;
-    } else if (causale === '100'){
-      console.log('Causale 100');
+    } else if (causale_all === '100'){
       $('#punteggio_tutto option[value=100]').prop("selected", true);
-    } 
-    var punteggio = $('select#punteggio_tutto').find(":selected").val();
-    
-    if (!punteggio){
-      $("#ConsOutput").html('<div class="alert alert-danger" role="alert">Selezionare una % di completamento</div>').fadeIn("slow");
-      return;
-    } else if (causale != '100' && punteggio==='100'){
-      $("#ConsOutput").html('<div class="alert alert-danger" role="alert">Causale e punteggio non compatibili</div>').fadeIn("slow");
-      return;
+    } else { 
+      var punteggio_all = $('select#punteggio_tutto').find(":selected").val();
+      console.log('Punteggio '+punteggio_all);
+      
+      if (!punteggio_all){
+        $("#ConsOutput").html('<br><div class="alert alert-danger alert-animated" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> Selezionare una % di completamento</div>').fadeIn("slow");
+        return;
+      } else if (causale_all != '100' && punteggio_all==='100'){
+        $("#ConsOutput").html('<br><div class="alert alert-danger alert-animated" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> Causale e punteggio non compatibili</div>').fadeIn("slow");
+        return;
+      }
     }
-
     // messaggio OK
-    var messaggio= '<div class="alert alert-warning" role="alert"> Le modifiche sono state applicate su tutti i tratti selezionati. <b>Ricorda di salvare per rendere effettiva la modifica.</b></div>';
+    var messaggio= '<br><div class="alert alert-warning alert-animated" role="alert"> <i class="bi bi-exclamation-triangle-fill"></i> Le modifiche sono state applicate su tutti i tratti selezionati. <b>Ricorda di salvare per rendere effettiva la modifica.</b></div>';
     console.log(messaggio);
     $("#ConsOutput").html(messaggio).fadeIn("slow");
-    return $.map($table1.bootstrapTable('getSelections'), 
+    return $.map($table_tappe.bootstrapTable('getSelections'), 
     function(row, index) {
-        $('#insert_'+row.tappa+' option[value='+causale+']').prop("selected", true);
-        $('#punteggio_'+row.tappa+' option[value='+punteggio+']').prop("selected", true);
+        $('#insert_'+row.tappa+' option[value='+causale_all+']').prop("selected", true);
+        $('#punteggio_'+row.tappa+' option[value='+punteggio_all+']').prop("selected", true);
     });
     
   
@@ -394,7 +389,7 @@ function updateAll() {
 
 
 function getRowSelections() {
-    return $.map($table1.bootstrapTable('getSelections'), 
+    return $.map($table_tappe.bootstrapTable('getSelections'), 
     function(row, index) {
       //console.log(row.tappa);
       var causale = $('select#insert_'+row.tappa+'').find(":selected").val();
@@ -412,7 +407,7 @@ function getRowSelections() {
 
 function select_causale() {
   //console.log('Chiamo la funzione select_causale');
-  return $.map($table1.bootstrapTable('getSelections'), 
+  return $.map($table_tappe.bootstrapTable('getSelections'), 
     function(row, index) {
       // tolgo i
       if (row.id_causale) {
@@ -426,22 +421,23 @@ function select_causale() {
 
 
 function update_p() {
-  return $.map($table1.bootstrapTable('getSelections'), 
+  return $.map($table_tappe.bootstrapTable('getSelections'), 
     function(row, index) {
       var causale = $('select#insert_'+row.tappa+'').find(":selected").val();
-      console.log(causale);
+      console.log('Ho scelto manualmente la causale ' + causale);
       if (causale==='100'){
         $('#punteggio_'+row.tappa+' option:selected').prop("selected", false);
         $('#punteggio_'+row.tappa+'').attr('disabled',true);
       } else {
          $('#punteggio_'+row.tappa+' option[value=0]').prop("selected", true);
+         $('#punteggio_'+row.tappa+'').attr('disabled',false);
       }
     })
 }
 
 
 function getRowSelections() {
-    return $.map($table1.bootstrapTable('getSelections'), 
+    return $.map($table_tappe.bootstrapTable('getSelections'), 
     function(row, index) {
       //console.log(row.tappa);
       var causale = $('select#insert_'+row.tappa+'').find(":selected").val();
@@ -514,7 +510,7 @@ function  punteggioForm(value, row, index) {
         '<option name="punteggio" value="75">75</option>',
         '<option name="punteggio" value="50">50</option>',
         '<option name="punteggio" value="25">25</option>',
-        '<option name="punteggio" value="50">0</option>',
+        '<option name="punteggio" value="0">0</option>',
         '</select>'
         //'</form>'
       ].join(''); 

@@ -16,7 +16,7 @@ e distribuito con licenza open source GNU GPL 3.0. <br>Il codice dell'applicazio
 <a href="https://github.com//amiugete/sit_addons" targer="_new"> <i class="fab fa-github"></i> github</a>. 
 In caso di problemi <?php echo $problemi;?>
 <br>
-<a href="https://www.amiu.genova.it" target="_blank"><img style="max-width:200px;" class="rounded" src="./img/logo_amiu.jpg" alt=""></a>
+<a href="https://www.amiu.genova.it" target="_blank"><img style="max-width:200px;" class="rounded" src="./img/logo_amiu_tr.png" alt=""></a>
 </span>
 </div>
 </footer>
