@@ -11,14 +11,9 @@ if ($_SESSION['test']==1) {
 // Faccio il controllo su SIT (sempre produzione non test)
 
 $query_role="SELECT  su.id_user, sr.id_role, sr.\"name\" as \"role\",
-coalesce(suse.esternalizzati, 'f') as esternalizzati, 
-coalesce(suse.sovrariempimenti, 'f') as sovrariempimenti, 
-coalesce(suse.sovrariempimenti_admin, 'f') as sovrariempimenti_admin, 
-coalesce(suse.coge, 'f') as coge,
-coalesce(suse.utenze, 'f') as utenze
+su.email
 FROM util.sys_users su
 join util.sys_roles sr on sr.id_role = su.id_role  
-left join etl.sys_users_addons suse on suse.id_user = su.id_user 
 where su.\"name\" ilike $1 and su.id_user>0;";
 $result_n = pg_prepare($conn, "my_query_navbar1", $query_role);
 if (pg_last_error($conn)){
@@ -34,11 +29,8 @@ while($r = pg_fetch_assoc($result_n)) {
   $id_role_SIT=(int)$r['id_role'];
   //$id_user_SIT=$r['id_user'];
   $_SESSION['id_user']=$r['id_user'];
-  $check_esternalizzati=$r['esternalizzati'];
-  $check_sovr=$r['sovrariempimenti'];
-  $check_sovr_admin=$r['sovrariempimenti_admin'];
-  $check_coge=$r['coge'];
-  $check_utenze=$r['utenze'];
+
+  $mail_SIT=$r['email'];
   $check_SIT=1;
 }
 
@@ -153,11 +145,47 @@ if ($check_modal!=1){
             ?>)
           </a>
         
+
+
+        <?php 
+        $query_utente="select su.\"name\", su.email, 
+          concat(sr.name, ' - ', sr.description) as ruolo, 
+          case
+            when min(suu.id_ut) = -1 then 'Tutte le UT/Rimesse'
+            else string_agg(u.descrizione, ', ') 
+          end uts, 
+          case
+            when min(suu.id_ut) = -1 then (select string_agg(distinct id_uo::text, ', ') from anagrafe_percorsi.cons_mapping_uo cmu1 ".$filter_totem_ok.")
+            else string_agg(cmu.id_uo::text, ', ') 
+          end id_uos
+          from util.sys_users su 
+          join util.sys_roles sr on sr.id_role = su.id_role 
+          left join util.sys_users_ut suu on suu.id_user = su.id_user 
+          left join topo.ut u on u.id_ut = suu.id_ut 
+          left join anagrafe_percorsi.cons_mapping_uo cmu on cmu.id_uo_sit = u.id_ut
+          where  su.\"name\" ilike $1 and su.id_user > 0
+          group by su.\"name\", su.email, sr.name, sr.description";
+
+          //echo $query_utente;
+          $result1 = pg_prepare($conn, "my_queryUser", $query_utente);
+          $result1 = pg_execute($conn, "my_queryUser", array($_SESSION['username']));
+
+
+          while($r1 = pg_fetch_assoc($result1)) {
+            $mail_user=$r1['email'];
+            $profilo=$r1['ruolo'];
+            
+            $uts=$r1['uts'];
+            $uos=$r1['id_uos'];
+            $_SESSION['id_uos']=$r1['id_uos'];
+
+          }
+        ?>
         <div class="dropdown-menu" style="left: auto" id="navbarDropdown4" aria-labelledby="navbarDropdown4">
           <ul>
-            <li><b>Mail: </b></li>
-            <li><b>Profilo: </b></li>
-            <li><b>UT/Rimesse: </b></li>
+            <li><b>Mail: </b><?php echo $mail_user?></li>
+            <li><b>Profilo: </b><?php echo $profilo?></li>
+            <li><b>UT/Rimesse: </b><?php echo $uts?></li>
             <hr>
             <li><b>Check ruolo SIT:</b><?php echo $role_SIT; ?></li>
             <li><b>Check superedit: </b><?php echo $check_superedit; ?></li>
