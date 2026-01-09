@@ -157,7 +157,8 @@ if ($check_modal!=1){
           case
             when min(suu.id_ut) = -1 then (select string_agg(distinct id_uo::text, ', ') from anagrafe_percorsi.cons_mapping_uo cmu1 ".$filter_totem_ok.")
             else string_agg(cmu.id_uo::text, ', ') 
-          end id_uos
+          end id_uos, 
+          min(suu.id_ut) as controllo 
           from util.sys_users su 
           join util.sys_roles sr on sr.id_role = su.id_role 
           left join util.sys_users_ut suu on suu.id_user = su.id_user 
@@ -174,6 +175,7 @@ if ($check_modal!=1){
           while($r1 = pg_fetch_assoc($result1)) {
             $mail_user=$r1['email'];
             $profilo=$r1['ruolo'];
+            $controllo =$r1['controllo'];
             
             $uts=$r1['uts'];
             $uos=$r1['id_uos'];
@@ -274,3 +276,12 @@ if (window.innerWidth < 992) {
 }); 
 // 
 </script>
+
+<?php
+  if ($role_SIT=='VIEW' && $controllo== -1) {
+    die(' Utente con solo permessi di lettura e nessun limite sulle UT.
+    <br> Operazioni di consuntivazione non permesse.
+    <br> Contattare l\'amministratore di sistema per eventuali modifiche ai permessi.
+    <br><br><a href="./logout.php" class="btn btn-info"> Logout </a>');
+  }
+?>
