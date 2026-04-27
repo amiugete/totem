@@ -113,7 +113,8 @@ if ($res_ok==0){
     echo '<div class="alert alert-danger" role="alert">  ERRORE - contatta assterritorio@amiu.genova.it</font>';
 }
 
-
+// ATTENZIONE POI OGNI 2' GIRA SCRIPT PYTHON  script_sit_amiu/EKOVISION/consuntivazioni_totem_eko.py che esegue le schede 
+// VALUTARE SE MIGLIORARE 
 ?>
 
 

@@ -114,6 +114,11 @@ if ($res_ok==0){
 }
 
 
+
+// ATTENZIONE POI OGNI 2' GIRA SCRIPT PYTHON  script_sit_amiu/EKOVISION/consuntivazioni_totem_eko.py che esegue le schede 
+// VALUTARE SE MIGLIORARE 
+
+
 ?>
 
 
