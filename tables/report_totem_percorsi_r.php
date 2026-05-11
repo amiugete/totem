@@ -58,7 +58,8 @@ case
 	when causali='100' then 'COMPLETATO'
 	when causali like '%100%' then 'NON COMPLETATO' 
 	when causali is not null and causali not like '%100%' then 'NON EFFETTUATO' 
-	when causali is null then 'NON CONSUNTIVATO'
+	when causali is null and no_autista = 0 then 'NON CONSUNTIVATO'
+	when causali is null and no_autista = 1 then 'NON CONSUNTIVATO NO AUTISTA'
 end stato_consuntivazione, datalav,
 id_percorso as id_percorso1
 from (
@@ -71,7 +72,8 @@ from (
 		check_previsto
 	) as check_previsto,
 	string_agg(distinct causale, ',') as causali, 
-	string_agg(distinct descr_causale, ',') as causali_text, datalav
+	string_agg(distinct descr_causale, ',') as causali_text, datalav,
+	no_autista
 	from (
 		select at2.descr_orario,
 		cpra.desc_servizio as descr_servizio, cpra.id_percorso, cpra.desc_percorso as descr_percorso, 
@@ -90,17 +92,24 @@ from (
 		to_date($1, 'DD/MM/YYYY'),
 		freq_settimane)
 		as check_previsto,	
-		coalesce(ea.datalav, to_date($1, 'DD/MM/YYYY')) as datalav
+		coalesce(ea.datalav, to_date($1, 'DD/MM/YYYY')) as datalav, 
+		case 
+			when na.id_percorso is not null then 1
+			else 0
+		end as no_autista
 		from raccolta.cons_percorsi_raccolta_amiu cpra
 		left join raccolta.anagr_turni at2 on at2.id_turno = cpra.id_turno
 		--left join raccolta.tipi_rifiuto tr on tr.nome= cpra.tipo_rifiuto 
 		--left join spazzamento.aste_ut pu on pu.id_asta=cpra.id_asta
 		left join raccolta.v_effettuati ea on ea.tappa::bigint = cpra.id_tappa::bigint 
 											and ea.datalav = to_date($1, 'DD/MM/YYYY')
+		left join raccolta.percorsi_no_autista_x_ekovision na 
+			on na.id_percorso = cpra.id_percorso 
+			and to_date($1, 'DD/MM/YYYY') = na.datalav
 		left join raccolta.causali_testi ct on trim(ct.descrizione) = trim(ea.causale)
 		where (to_date($1, 'DD/MM/YYYY') between cpra.data_inizio and (cpra.data_fine - interval '1' day))
 		) as step0
-	group by descr_servizio, id_percorso, descr_percorso, descr_orario,datalav
+	group by descr_servizio, id_percorso, descr_percorso, descr_orario,datalav, no_autista
 ) as step1
 where /*(causali is not null or check_previsto > 0) and */ 
 ($2 = any(id_uo_esec))

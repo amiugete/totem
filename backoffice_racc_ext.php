@@ -339,7 +339,8 @@ if ($hour < '1120'){
         data-filter-strict-search="true" data-search-formatter="false" data-filter-data="var:opzioni" data-filter-control="select">Stato</th>
         <th data-field="causali_text" data-sortable="true" data-visible="true" data-filter-control="select">Causali</th>
         <th data-field="in_previsione" data-sortable="true" data-visible="true" data-filter-control="select"
-        data-formatter="nameFormatterPrevisto" data-filter-data="var:opzioni1" data-filter-strict-search="true" data-search-formatter="false">Previsto</th>
+        data-formatter="nameFormatterPrevisto_RACC" 
+        data-filter-data="var:opzioni1" data-filter-strict-search="true" data-search-formatter="false">Previsto</th>
         <th data-field="datalav" data-sortable="true"  data-formatter="dateFormat" data-visible="true" data-filter-control="input">data</th>
         <!--th data-field="" data-sortable="true"  data-events="operateEvents" data-formatter="operateFormatter" 
          data-visible="true">Vis Consuntivato</th-->
@@ -386,14 +387,16 @@ $(function() {
 
 
 
-  var opzioni = ['COMPLETATO', 'NON CONSUNTIVATO', 'NON COMPLETATO', 'NON EFFETTUATO'] ;
+  var opzioni = ['COMPLETATO', 'NON CONSUNTIVATO', 'NON CONSUNTIVATO NO AUTISTA', 'NON COMPLETATO', 'NON EFFETTUATO'] ;
 
 function nameFormatterStato(value, row, index) {
   if (row.stato_consuntivazione =='COMPLETATO'){
     return '<span style="font-size: 1em; color: green;"> <i title="'+row.stato_consuntivazione+'" class="fa-solid fa-circle"></i></span>';
   } else if (row.stato_consuntivazione =='NON CONSUNTIVATO' && row.in_previsione ==='PREVISTO') {
     return '<span style="font-size: 1em; color: black;"> <i title="'+row.stato_consuntivazione+'" class="fa-solid fa-circle"></i></span>';
-  } else if (row.stato_consuntivazione =='NON CONSUNTIVATO' && row.in_previsione ==='NON PREVISTO' ) {
+  } else if (row.stato_consuntivazione =='NON CONSUNTIVATO NO AUTISTA' && row.in_previsione ==='PREVISTO') {
+    return '<span style="font-size: 1em; color: black;"> <i title="'+row.stato_consuntivazione+'" class="fa-solid fa-circle"></i> <i class="fa-solid fa-user-xmark"></i> </span>';
+  }else if (row.stato_consuntivazione =='NON CONSUNTIVATO' && row.in_previsione ==='NON PREVISTO' ) {
     return ' ';
   } else if (row.stato_consuntivazione === 'NON EFFETTUATO') {
     return '<span style="font-size: 1em; color: red;"> <i title="'+row.stato_consuntivazione+'" class="fa-solid fa-circle"></i></span>';
@@ -407,11 +410,12 @@ function nameFormatterStato(value, row, index) {
 
 var opzioni1 = ['PREVISTO', 'NON PREVISTO'];
 
-function nameFormatterPrevisto(value, row, index) {
-  if (value =='PREVISTO'){
-    return '<span style="font-size: 1em; color: green;"> <i title="'+value+'" class="fa-regular fa-calendar-check"></i></span>';
-  } else if (value =='NON PREVISTO') {
-    return '<span style="font-size: 1em; color: red;"> <i title="'+value+'" class="fa-regular fa-calendar-xmark"></i></span>';
+function nameFormatterPrevisto_RACC(value, row, index) {
+  //console.log('Valore in_previsione:', row.in_previsione);
+  if (row.in_previsione =='PREVISTO'){
+    return '<span style="font-size: 1em; color: green;"> <i title="'+row.in_previsione+'" class="fa-regular fa-calendar-check"></i></span>';
+  } else if (row.in_previsione =='NON PREVISTO') {
+    return '<span style="font-size: 1em; color: red;"> <i title="'+row.in_previsione+'" class="fa-regular fa-calendar-xmark"></i></span>';
   }
 };
 
@@ -626,7 +630,32 @@ window.consEvents = {
 // rendi non eseguito
 
 function consFormatter3(value, row, index) {
-      if (row.stato_consuntivazione =='NON CONSUNTIVATO' && row.in_previsione == 'PREVISTO') {
+      if (row.stato_consuntivazione.startsWith('NON CONSUNTIVATO') && row.in_previsione == 'PREVISTO') {
+        if (row.stato_consuntivazione =='NON CONSUNTIVATO' && row.uo_esec.includes(',') && (<?php echo $uos;?> === 16 || <?php echo $uos;?> === 17)) {
+          <?php 
+          //echo $role_SIT;
+          if ($role_SIT == 'VIEW' ) {
+          ?>
+          return [
+          '<button class="info btn btn-danger btn-sm" disabled="" id="no_autista" title="Autista non disponibile">',
+          '<i class="fa-solid fa-user-slash"></i>',
+          '</button>'
+        ].join('');
+          <?php
+          } else {
+          ?>
+        return [
+          '<button class="info btn btn-danger btn-sm" id="no_autista" title="Autista non disponibile">',
+          '<i class="fa-solid fa-user-slash"></i>',
+          '</button>'
+        ].join('');
+        <?php
+          }
+        ?>
+        } else if (row.uo_esec.includes(',') && (<?php echo $uos;?> === 16 || <?php echo $uos;?> === 17)){
+          // è il caso cin cui sia già stato rimosso l'autista e sono una rimessa
+          return '';
+        } else {
         <?php 
           //echo $role_SIT;
           if ($role_SIT == 'VIEW') {
@@ -648,9 +677,12 @@ function consFormatter3(value, row, index) {
           }
         ?>
       }
+      }
 };
 
 
+
+// questa funzione è per rendere un percorso non eseguito, con inserimento causale
 window.consEvents3 = {
     'click .info#non_eseguito': function (e, value, row, index) {
         console.log('Devo rendere il percorso non eseguito');
@@ -696,6 +728,52 @@ window.consEvents3 = {
        
     }
 };
+
+
+// questa funzione è per inserire causale su operatore
+window.consEvents3 = {
+    'click .info#no_autista': function (e, value, row, index) {
+        console.log('Devo aggiungere causale su autista');
+        var id = row.id_percorso;
+        var datalav = moment(row.datalav).format('DD/MM/YYYY');
+        console.log('id = ' +id);
+        console.log('datalav = '+datalav);
+        //console.log('consuntivatore = '+consuntivatore);
+        
+
+
+        $.ajax({   
+            type: "POST",
+            url: "backoffice/no_autista.php",
+            data: 'id=' + id + '&datalav='+datalav + '&consuntivatore=UT'+<?php echo $uos;?>+'',
+            dataType: "text",                  
+            success: function(response){                    
+                $table.bootstrapTable('refresh', {
+                url: "./tables/report_totem_percorsi_r.php?uos="+<?php echo $uos;?>+"&d="+datalav
+                
+            });
+            console.log('refresh tabella fatto');
+            },
+            error: function (xhr, textStatus, errorThrown, response) {
+                console.error("Errore AJAX:", textStatus, errorThrown);
+
+                $("#ConsOutput2").html(`
+                  <div class="alert alert-danger alert-animated" role="alert">
+                    ❌ Errore durante l'elaborazione della richiesta.<br>
+                    <b>Dettagli:</b> ${errorThrown ||'Errore sconosciuto'}<br>
+                    ${response}<br>
+                    Verifica la connessione o riprova più tardi.
+                  </div>
+                `).fadeIn("slow");
+            }
+
+        });
+       
+    }
+};
+
+
+
 
 
 
@@ -781,7 +859,7 @@ require('./footer.php');
 
 
 <!-- Script -->
-<<script type="text/javascript">
+<script type="text/javascript">
   const myModalEl = document.getElementById('PercorsoModal');
 
   myModalEl.addEventListener('hidden.bs.modal', function () {
@@ -789,7 +867,8 @@ require('./footer.php');
     console.log("Modal chiuso");
     // Qui puoi chiamare qualsiasi altra funzione
     var data_percorsi=$('#js-date3').val();
-    //console.log(data_percorsi);
+
+    console.log(data_percorsi);
     //console.log($table);
     $table.bootstrapTable('refresh', {
       url: "./tables/report_totem_percorsi_r.php?uos="+<?php echo $uos;?>+"&d="+data_percorsi
@@ -804,7 +883,7 @@ require('./footer.php');
 <script type="text/javascript">
  var today = new Date();
  var week_before=new Date();
- week_before.setDate(week_before.getDate() - 7);
+ week_before.setDate(week_before.getDate() - <?php echo intval($giorni_indietro);?>);
 $('#js-date3').datepicker({
       format: 'dd/mm/yyyy',
       todayBtn: "linked", // in conflitto con startDate
@@ -825,7 +904,7 @@ function aggiornaBottoniNavigazione() {
 
 
   var week_before=new Date();
-  week_before.setDate(week_before.getDate() - 7);
+  week_before.setDate(week_before.getDate() - <?php echo intval($giorni_indietro);?>);
   // azzera ore per confronto solo giorno/mese/anno
   current.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);

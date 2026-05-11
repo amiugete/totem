@@ -143,8 +143,11 @@ $(function() {
 </div>
 
 <?php
-require_once('req_bottom.php');
-//require('./footer.php');
+//se cariccato da modal non ricarico footer e req_bottom, altrimenti se caricato da url diretto li carico
+if (!isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+    require_once('req_bottom.php');
+    require('./footer.php');
+}
 ?>
 
 

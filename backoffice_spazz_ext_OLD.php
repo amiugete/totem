@@ -188,3 +188,5 @@ $('#js-date1').datepicker({
 </body>
 
 </html>
+
+<?php  ?>

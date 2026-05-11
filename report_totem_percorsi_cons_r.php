@@ -62,6 +62,8 @@ and to_date($2, 'DD/MM/YYYY') between cpsxa.data_inizio and cpsxa.data_fine";
 
 $result0 = pg_prepare($conn_hub, "query_percorso", $query_percorso);
 
+$res_ok=0;
+
 if (!pg_last_error($conn_hub)){
     #$res_ok=0;
 } else {
@@ -298,7 +300,7 @@ FROM raccolta.cons_percorsi_raccolta_amiu cpra
 WHERE id_percorso = $1
 and TO_DATE($2, 'DD/MM/YYYY') BETWEEN data_inizio AND data_fine
 order by 2";
-      $result2 = pg_prepare($conn_hub, "query2", $query2);
+      $result2 = pg_prepare($conn_hub, "query_vie", $query2);
 
       if (!pg_last_error($conn_hub)){
           #$res_ok=0;
@@ -307,7 +309,7 @@ order by 2";
           $res_ok= $res_ok+1;
       }
       //echo "Sono qua 2";
-      $result2 = pg_execute($conn_hub, "query2", array($id, $datalav));  
+      $result2 = pg_execute($conn_hub, "query_vie", array($id, $datalav));  
       if (!pg_last_error($conn_hub)){
           #$res_ok=0;
       } else {
@@ -410,7 +412,7 @@ order by 2";
         <th data-field="tappa" data-sortable="false" data-visible="true" data-formatter="tastiBidoni" >Tappa</th>
         <th data-field="id_via" data-sortable="false" data-visible="false" >Cod via</th>
         <th data-field="riferimento" data-sortable="true" data-visible="true" data-filter-control="input">Tratto</th>
-        <th data-field="check_previsto" data-sortable="true" data-visible="true">Previsto</th>
+        <th data-field="check_previsto" data-sortable="true" data-formatter="nameFormatterPrevisto" data-visible="true">Previsto</th>
         <th data-field="id_causale" data-sortable="true" data-visible="true" data-formatter="causaleForm">Causale</th>
 
         <th data-field="" data-sortable="true" data-visible="true" data-formatter="consStato">Stato<br>consuntivazione</th>
@@ -612,7 +614,7 @@ function update_p() {
 }
 
 
-function getRowSelections() {
+/*function getRowSelections() {
 
 
     return $.map($table_tappe.bootstrapTable('getData'), 
@@ -623,7 +625,25 @@ function getRowSelections() {
       console.log('Causale tappa '+row.tappa+': '+causale);
       return row.tappa+'-'+causale+'-'+numBidoniVerdi;
     })
-  };
+  };*/
+
+  function getRowSelections() {
+    return $.map($table_tappe.bootstrapTable('getData'), 
+    function(row, index) {
+      var num_elementi = parseInt(row.num_elementi) || 0;
+      let numBidoniVerdi = $('[id^="'+row.tappa+'_"].bin-green').length;
+      var causale = $('select#insert_'+row.tappa+'').find(":selected").val();
+      console.log('Causale tappa '+row.tappa+': '+causale);
+
+      // ← AGGIUNGI QUESTO: salta le tappe non previste senza causale valida
+      if (row.check_previsto !== '1' && (!causale || causale === '')) {
+        console.log('Salto tappa non prevista senza causale: ' + row.tappa);
+        return null; // $.map ignora i valori null/undefined
+      }
+
+      return row.tappa+'-'+causale+'-'+numBidoniVerdi;
+    })
+}
 
 
 
@@ -963,6 +983,9 @@ function updateTappa(tappa, caus) {
    
   };*/
 
+
+
+
 function causaleForm(value, row, index) {
 
     let html = '';
@@ -976,7 +999,7 @@ function causaleForm(value, row, index) {
         <?php
         $query = "SELECT id, descrizione 
                   FROM raccolta.causali_testi
-                  WHERE descrizione NOT LIKE 'TERMINATO SENZA DISSERVIZI' 
+                  WHERE id <> '100' /*NOT LIKE 'TERMINATO SENZA DISSERVIZI' */
                   ORDER BY 2";
         $result = pg_query($conn_hub, $query);
         while ($r = pg_fetch_assoc($result)) {
@@ -985,7 +1008,27 @@ function causaleForm(value, row, index) {
         <?php } ?>
 
         html += '</select>';
+    } else if (row.check_previsto === '0') {
 
+        html += '<select id="insert_' + row.tappa + '" class="show-tick form-select" data-live-search="true" onclick="update_p()" name="causale" required>';
+        html += '<option value="">Seleziona una causale</option>';
+
+        <?php
+        $query = "SELECT id, descrizione 
+                  FROM raccolta.causali_testi
+                  WHERE descrizione = 'COMPLETATO' 
+                  ORDER BY 2";
+        $result = pg_query($conn_hub, $query);
+        while ($r = pg_fetch_assoc($result)) {
+        ?>
+            if (selectedId == '<?php echo trim($r["id"]); ?>') {
+                html += '<option value="<?php echo trim($r["id"]); ?>" selected><?php echo addslashes($r["descrizione"]); ?></option>';
+            } else {
+                html += '<option value="<?php echo trim($r["id"]); ?>"><?php echo addslashes($r["descrizione"]); ?></option>';
+            }
+        <?php } ?>
+
+        html += '</select>';
     } else {
 
         html += '<select id="insert_' + row.tappa + '" class="show-tick form-select" data-live-search="true" onclick="update_p()" name="causale" required>';
@@ -1013,7 +1056,13 @@ function causaleForm(value, row, index) {
 }
 
 
-
+function nameFormatterPrevisto(value, row, index) {
+  if (row.check_previsto == '1' || row.check_previsto === 1 || row.check_previsto === true){
+    return '<span style="font-size: 1em; color: green;"> <i title="'+row.check_previsto+'" class="fa-regular fa-calendar-check"></i></span>';
+  } else {
+    return '<span style="font-size: 1em; color: red;"> <i title="'+row.check_previsto+'" class="fa-regular fa-calendar-xmark"></i></span>';
+  }
+};
 
 
 </script>
@@ -1034,8 +1083,11 @@ function causaleForm(value, row, index) {
 </div>
 
 <?php
-require_once('req_bottom.php');
-//require('./footer.php');
+//se cariccato da modal non ricarico footer e req_bottom, altrimenti se caricato da url diretto li carico
+if (!isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+    require_once('req_bottom.php');
+    require('./footer.php');
+}
 ?>
 
 

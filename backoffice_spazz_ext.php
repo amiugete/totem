@@ -335,7 +335,7 @@ if ($hour < '1120'){
         data-filter-strict-search="true" data-search-formatter="false" data-filter-data="var:opzioni" data-filter-control="select">Stato</th>
         <th data-field="causali_text" data-sortable="true" data-visible="true" data-filter-control="select">Causali</th>
         <th data-field="in_previsione" data-sortable="true" data-visible="true" data-filter-control="select"
-        data-formatter="nameFormatterPrevisto" data-filter-data="var:opzioni1" data-filter-strict-search="true" data-search-formatter="false">Previsto</th>
+        data-formatter="nameFormatterPrevisto_SPAZZ" data-filter-data="var:opzioni1" data-filter-strict-search="true" data-search-formatter="false">Previsto</th>
         <th data-field="datalav" data-sortable="true"  data-formatter="dateFormat" data-visible="true" data-filter-control="input">data</th>
         <!--th data-field="" data-sortable="true"  data-events="operateEvents" data-formatter="operateFormatter" 
          data-visible="true">Vis Consuntivato</th-->
@@ -403,7 +403,7 @@ function nameFormatterStato(value, row, index) {
 
 var opzioni1 = ['PREVISTO', 'NON PREVISTO'];
 
-function nameFormatterPrevisto(value, row, index) {
+function nameFormatterPrevisto_SPAZZ(value, row, index) {
   if (value =='PREVISTO'){
     return '<span style="font-size: 1em; color: green;"> <i title="'+value+'" class="fa-regular fa-calendar-check"></i></span>';
   } else if (value =='NON PREVISTO') {
@@ -774,18 +774,24 @@ require('./footer.php');
 
 
 <!-- Script -->
-<<script type="text/javascript">
+<script type="text/javascript">
   const myModalEl = document.getElementById('PercorsoModal');
 
   myModalEl.addEventListener('hidden.bs.modal', function () {
     // Funzione da eseguire alla chiusura del modal
     console.log("Modal chiuso");
+
+    // Pulizia esplicita del backdrop (fix navbar bloccata)
+    $('.modal-backdrop').remove();
+    $('body').removeClass('modal-open').css('padding-right', '');
+
+    
     // Qui puoi chiamare qualsiasi altra funzione
     var data_percorsi=$('#js-date3').val();
     //console.log(data_percorsi);
     //console.log($table);
     $table.bootstrapTable('refresh', {
-      url: "./tables/report_totem_percorsi_r.php?uos="+<?php echo $uos;?>+"&d="+data_percorsi
+      url: "./tables/report_totem_percorsi_s.php?uos="+<?php echo $uos;?>+"&d="+data_percorsi
     });   
     console.log('refresh tabella fatto');
 });
@@ -797,7 +803,7 @@ require('./footer.php');
 <script type="text/javascript">
  var today = new Date();
  var week_before=new Date();
- week_before.setDate(week_before.getDate() - 7);
+ week_before.setDate(week_before.getDate() - <?php echo intval($giorni_indietro);?>);
 $('#js-date3').datepicker({
       format: 'dd/mm/yyyy',
       todayBtn: "linked", // in conflitto con startDate
@@ -818,7 +824,7 @@ function aggiornaBottoniNavigazione() {
 
 
   var week_before=new Date();
-  week_before.setDate(week_before.getDate() - 7);
+  week_before.setDate(week_before.getDate() - <?php echo intval($giorni_indietro);?>);
   // azzera ore per confronto solo giorno/mese/anno
   current.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);
