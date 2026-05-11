@@ -1,5 +1,9 @@
 <?php
 session_start();
+
+# definisco quanto andare indietro con i giorni
+$giorni_indietro=20;
+
 //require_once('./check_utente.php');
 
 if ($_SESSION['test']==1) {
