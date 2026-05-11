@@ -684,6 +684,8 @@ function consFormatter3(value, row, index) {
 
 // questa funzione è per rendere un percorso non eseguito, con inserimento causale
 window.consEvents3 = {
+
+    // NOn eseguito
     'click .info#non_eseguito': function (e, value, row, index) {
         console.log('Devo rendere il percorso non eseguito');
         var id = row.id_percorso;
@@ -726,12 +728,12 @@ window.consEvents3 = {
 
         });
        
-    }
-};
+    },
 
 
-// questa funzione è per inserire causale su operatore
-window.consEvents3 = {
+
+    // No autista
+    
     'click .info#no_autista': function (e, value, row, index) {
         console.log('Devo aggiungere causale su autista');
         var id = row.id_percorso;
