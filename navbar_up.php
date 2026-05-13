@@ -2,7 +2,7 @@
 session_start();
 
 # definisco quanto andare indietro con i giorni
-$giorni_indietro=20;
+$giorni_indietro=60;
 
 //require_once('./check_utente.php');
 
