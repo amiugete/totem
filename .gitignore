@@ -4,5 +4,11 @@ conn_test.php
 ldap.php 
 jwt.php
 
+
+.env
+
+
+
+
 py_scripts/credenziali.py
 py_scripts/log/*.log
