@@ -2,142 +2,138 @@
 
 function redirect($url)
 {
-    $string = '<script type="text/javascript">';
-    $string .= 'window.location = "' . $url . '"';
-    $string .= '</script>';
-
-    //echo $string;
+    header("Location: $url");
+    exit;
 }
-
 
 session_start();
 
-// definisco la variabile lifetime
-$lifetime=86400;
+// =========================
+// CONFIG
+// =========================
+$lifetime = 86400; // cookie 1 giorno
+$timeout  = 8 * 60 * 60; // 8 ore sessione logica
+
 session_set_cookie_params($lifetime);
-/*if ($_GET['jwt']){
-  setcookie("tokenCookie", $_GET['jwt'], time() + ($lifetime * 7));
-}*/
 
-// provo a vedere se c'è già il nome utente salvato
-if ($_GET['jwt']){
+// =========================
+// KEEP ALIVE LOGICO
+// =========================
+if (isset($_SESSION['last_activity']) &&
+    (time() - $_SESSION['last_activity']) > $timeout) {
 
-  // unset cookies che ricreo
-  if (isset($_SERVER['HTTP_COOKIE'])) {
-    //echo 'sono qua';
-    //exit();
-    $cookies = explode(';', $_SERVER['HTTP_COOKIE']);
-    foreach($cookies as $cookie) {
-        $parts = explode('=', $cookie);
-        $name = trim($parts[0]);
-        setcookie($name, '', time()-1000);
-        setcookie($name, '', time()-1000, '/');
-    }
-  } 
-  //echo "Caso 1 Cookie named un is not set!<br>";
-  // se non ho il nome provo con il token
-  $token0=$_GET['jwt'];
+    // sessione scaduta
+    $_SESSION = [];
+    session_destroy();
 
-  if($token0){
-    //echo "Caso 1 A <br>". $token0;
-    //set the duration to 0, so that cookie duration will end only when users browser is close
-    setcookie("tokenCookie", $token0, time() + ($lifetime * 7));
-    //echo 'cookie tokenCookie =' .$_COOKIE["tokenCookie"]."<br>";
-    $token=$token0;
-  } else {
-    //echo $_COOKIE['tokenCookie'];
-    $token=$_COOKIE['tokenCookie'];
-  }
-  //echo $token . "<br><br>";
+    redirect('./login.php?expired=1');
+}
 
-  //echo $secret_pwd ."ok 0<br><br>";
-    if (!$_SESSION['username']){
+$_SESSION['last_activity'] = time();
 
-      if ($token){
-        $decoded1=json_decode(base64_decode(str_replace('_', '/', str_replace('-','+',explode('.', $token)[1]))));
-        foreach($decoded1 as $key => $value)
-        {
-          //echo $key." is ". $value . "<br>";
-          if ($key=='userId') {
-                $userId = (int)$value;
-          }
-          if ($key=='name') {
-            //echo "sono qua<br>";
-            $_SESSION['username'] = $value;
-            setcookie("un", $value, time() + (86400 * 7)); // 86400 = 1 day
-            //$_COOKIE["un"]=$_SESSION['username'];
-            $_SESSION['start'] = time(); // Taking now logged in time.
-            // Ending a session in 8 hours from the starting time.
-            $_SESSION['expire'] = $_SESSION['start'] + (8* 60 * 60);
-          }
 
-          if ($key=='exp' AND  basename($_SERVER['PHP_SELF'])!='login.php') {
-                $exp = (int)$value;
-                if (time()>$exp){
-                    die ('Token di autorizzazione SIT scaduto <br><br><a href="./login.php" class="btn btn-info"> Vai al login </a>');
-                }
-          }
+// =========================
+// JWT / COOKIE LOGIN FLOW
+// =========================
+$userId = null;
+
+// JWT da GET
+if (isset($_GET['jwt'])) {
+
+    // pulizia cookie (come nel tuo codice)
+    if (isset($_SERVER['HTTP_COOKIE'])) {
+        $cookies = explode(';', $_SERVER['HTTP_COOKIE']);
+        foreach ($cookies as $cookie) {
+            $parts = explode('=', $cookie);
+            $name = trim($parts[0]);
+            setcookie($name, '', time() - 1000, '/');
         }
-      }
-    } else {
-      // se c'è lo username setto i cookies
-      setcookie("un", $_SESSION['username'], time() + (86400 * 7)); // 86400 = 1 day
     }
 
-  //echo 'Now: '. time()."<br><br>";
-  //echo 'Exp: '.$exp ."<br><br>";
-  //echo 'userId: '.$userId ."<br><br>";
-} else if ( $_SESSION['username']) {
-  // sessione aperta
-  //echo "Caso 2<br>";
-  $_SESSION['username']=$_SESSION['username'];
-  $_SESSION['start'] = time(); // Taking now logged in time.
-  // Ending a session in 8 hours from the starting time.
-  $_SESSION['expire'] = $_SESSION['start'] + (8* 60 * 60);
-  setcookie("un", $_SESSION['username'], time() + (86400 * 7)); // 86400 = 1 day
-  if (time()>$_SESSION['expire'] AND  basename($_SERVER['PHP_SELF'])!='login.php'){
-    die ('Pagina '.basename($_SERVER['PHP_SELF']). ' - Token di autorizzazione scaduto <br><br><a href="./login.php" class="btn btn-info"> Vai al login </a>');
-  }
-} else if ( $_COOKIE['un']) {
-  //echo "Cookie un is set!<br>";
-  //echo "Value is: " . $_COOKIE['un'];
-  $_SESSION['username']=$_COOKIE['un'];
-  $_SESSION['start'] = time(); // Taking now logged in time.
-  // Ending a session in 8 hours from the starting time.
-  $_SESSION['expire'] = $_SESSION['start'] + (8* 60 * 60);
-  if (time()>$_SESSION['expire'] AND  basename($_SERVER['PHP_SELF'])!='login.php'){
-    die ('Token di autorizzazione scaduto <br><br><a href="./login.php" class="btn btn-info"> Vai al login </a>');
-  }
-} /*else {
-  die ('Token di autorizzazione scaduto <br><br><a href="./login.php" class="btn btn-info"> Vai al login </a>');
-}*/
+    $token0 = $_GET['jwt'];
 
+    if ($token0) {
+        setcookie("tokenCookie", $token0, time() + ($lifetime * 7), "/");
+        $token = $token0;
+    } else {
+        $token = $_COOKIE['tokenCookie'] ?? null;
+    }
 
+    if (!isset($_SESSION['username']) && $token) {
 
-//$id=pg_escape_string($_GET['id']);
-//$user = $_SERVER['AUTH_USER'];
-//$username = $_SERVER['PHP_AUTH_USER'];
+        $decoded1 = json_decode(
+            base64_decode(str_replace('_', '/', str_replace('-', '+', explode('.', $token)[1])))
+        );
 
+        foreach ($decoded1 as $key => $value) {
 
-/*if (!$_SESSION['username'] AND  basename($_SERVER['PHP_SELF'])!='login.php'){
-  //echo 'NON VA BENE';
-  $_SESSION['origine']=basename($_SERVER['PHP_SELF']);
-  $_COOKIE['origine']=basename($_SERVER['PHP_SELF']);
-  //echo $_SESSION['expire'] ."<br>";
-  die ('Sessione scaduta <br><br><a href="./login.php" class="btn btn-info"> Vai al login </a>');
-  //redirect('login.php');
-  //header("location: ./login.php");
-  //exit;
-}*/
+            if ($key == 'userId') {
+                $userId = (int)$value;
+            }
 
-//echo $_SESSION['expire'] ."<br>";
-//echo "il problema non è qua";
-//exit();
-if (is_null($_SESSION['username']) AND basename($_SERVER['PHP_SELF'])!='login.php'){
-  //die ('Utente non riconosciuto <br><br><a href="./login.php" class="btn btn-info"> Vai al login </a>');
-  header("location: ./login.php");
-  
-  
+            if ($key == 'name') {
+                $_SESSION['username'] = $value;
 
+                setcookie("un", $value, time() + (86400 * 7), "/");
+
+                $_SESSION['start'] = time();
+                $_SESSION['expire'] = $_SESSION['start'] + $timeout;
+            }
+
+            if ($key == 'exp') {
+                if (time() > (int)$value && basename($_SERVER['PHP_SELF']) != 'login.php') {
+                    redirect('./login.php?expired=1');
+                }
+            }
+        }
+    }
+}
+
+// =========================
+// SESSIONE GIÀ ATTIVA
+// =========================
+else if (isset($_SESSION['username'])) {
+
+    setcookie("un", $_SESSION['username'], time() + (86400 * 7), "/");
+
+    if (!isset($_SESSION['expire'])) {
+        $_SESSION['expire'] = time() + $timeout;
+    }
+
+    if (time() > $_SESSION['expire'] && basename($_SERVER['PHP_SELF']) != 'login.php') {
+
+        $_SESSION = [];
+        session_destroy();
+
+        redirect('./login.php?expired=1');
+    }
+}
+
+// =========================
+// COOKIE FALLBACK
+// =========================
+else if (isset($_COOKIE['un'])) {
+
+    $_SESSION['username'] = $_COOKIE['un'];
+
+    $_SESSION['start'] = time();
+    $_SESSION['expire'] = $_SESSION['start'] + $timeout;
+
+    setcookie("un", $_SESSION['username'], time() + (86400 * 7), "/");
+
+    if (time() > $_SESSION['expire'] && basename($_SERVER['PHP_SELF']) != 'login.php') {
+
+        session_destroy();
+        redirect('./login.php?expired=1');
+    }
+}
+
+// =========================
+// ULTIMO CONTROLLO BLOCCANTE
+// =========================
+if (!isset($_SESSION['username']) &&
+    basename($_SERVER['PHP_SELF']) != 'login.php') {
+
+    redirect('./login.php');
 }
 ?>

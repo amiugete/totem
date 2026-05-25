@@ -49,11 +49,8 @@ require_once('./req.php');
 the_page_title();
 
 
-if ($_SESSION['test']==1) {
-    require_once ('./conn_test.php');
-} else {
-    require_once ('./conn.php');
-}
+require_once 'carica_env.php';
+require_once 'conn_ok.php';
 
 
 
@@ -255,7 +252,7 @@ if ($hour < '1120'){
 
 <div id="tabella">
             
-        <h4>Report consuntivazione spazzamento da totem - <?php echo $uos_descrizione;?></h4>
+        <h4>Report consuntivazione spazzamento da totem - <?php echo $uos_descrizione;?></h4> 
 
         <!-- Button trigger modal -->
 <!--button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
@@ -495,55 +492,6 @@ function operateFormatter(value, row, index) {
 */                     
 
 
-function consFormatter1(value, row, index) {
-      return [
-        '<form class="row" target="_blank" method="POST" autocomplete="off" action="https://expo.wingsoft.it/amiu/webapp/indexspazzasuser.php">',
-        '<!--cablato operatore pianar da sistemare meglio-->',
-        '<input type="hidden" name="operatore" value="9148">',
-        '<!--cablato -->',
-        '<input type="hidden" name="consuntivatore" value="UT11"> ',
-        '<!--cablato -->',
-        '<input type="hidden" name="codperc" value="'+row.id_percorso+'">',
-        '<input type="hidden" name="servizio1" value="'+row.descr_servizio+'">',
-        '<input type="hidden" name="zonaivo" value="'+row.descr_percorso+'">',
-        '<input type="hidden" name="zona1" value="'+row.uo_esec+'">',
-        '<input type="hidden" name="data1" value="'+moment(row.datalav).format('YYYY-MM-DD')+'">',
-        '<input type="hidden" name="admin1" value="1958">',
-        '<button type="submit" id="sbtn" class="btn btn-warning btn-sm"><i class="fa-solid fa-file-excel"></i></button>',
-        '</form>'
-      ].join('');
-};
-
-// da totem
-//https://expo.wingsoft.it/amiu/webapp/indexspazzapoi.php
-
-function consFormatter0(value, row, index) {
-      return [
-        '<form class="row"  method="POST" autocomplete="off" action="https://expo.wingsoft.it/amiu/webapp/indexspazzapoi.php">',
-        '<!--cablato operatore pianar da sistemare meglio-->',
-        '<input type="hidden" id="operatore" name="operatore" value="9148">',
-        '<input type="hidden" id="zona1" name="zona1" value="">',
-        '<input type="hidden" id="verifica" name="verifica" value="ok">',
-        '<input type="hidden" id="causalevel1" name="causalevel1" value="COMPLETATO">',
-        '<input type="hidden" id="causaperc1" name="causaperc1" value="100">',
-        '<input type="hidden" id="tutto" name="tutto" value="tutto">',
-        '<!--cablato -->',
-        '<input type="hidden" id="consuntivatore" name="consuntivatore" value="UT11">',
-        '<!--cablato -->',
-        '<input type="hidden" id="admin1" name="admin1" value="1958">',
-        '<input type="hidden" id="data1" name="data1" value="'+moment(row.datalav).format('YYYY-MM-DD')+'">',
-        '<input type="hidden" id="codperc" name="codperc" value="'+row.id_percorso+'|'+row.descr_percorso+'">',
-        '<input type="hidden" id="servizio1" name="servizio1" value="'+row.descr_servizio+'">',
-        '<!--input type="hidden" id="zonaivo" name="zonaivo" value="'+row.descr_percorso+'"-->',
-        
-        '<input type="hidden" id="codzona" name="codzona" value="'+row.uo_esec+'">',
-        '<input type="hidden" id="fidel" name="fidel" value="'+row.uo_esec+'">',
-        '<button type="submit" id="sbtn" class="btn btn-warning btn-sm"><i class="fa-solid fa-file-excel"></i></button>',
-        '</form>'
-      ].join('');
-};
-
-
 
 function consFormatter2(value, row, index) {
       return [
@@ -566,7 +514,7 @@ window.consEvents = {
         $.ajax({   
             type: "POST",
             url: "report_totem_percorsi_cons_s.php",
-            data: 'id=' + id + '&datalav='+datalav +'&consuntivatore=UT'+<?php echo $uos;?>+'',
+            data: 'id=' + id + '&datalav='+datalav +'&consuntivatore=UT<?php echo str_pad((string)$uos, 2, "0", STR_PAD_LEFT);?>',
             dataType: "text",                  
             success: function(response){                    
                 $(".modal-body").html(response); 
@@ -666,7 +614,7 @@ window.consEvents3 = {
         $.ajax({   
             type: "POST",
             url: "backoffice/non_eseguito_spazz.php",
-            data: 'id=' + id + '&datalav='+datalav + '&causale='+causale +'&consuntivatore=UT'+<?php echo $uos;?>+'',
+            data: 'id=' + id + '&datalav='+datalav + '&causale='+causale +'&consuntivatore=UT<?php echo str_pad((string)$uos, 2, "0", STR_PAD_LEFT);?>',
             dataType: "text",                  
             success: function(response){                    
                 $table.bootstrapTable('refresh', {

@@ -1,10 +1,7 @@
 <?php
 session_start();
-if ($_SESSION['test']==1) {
-    require('../conn_test.php');
-} else {
-    require('../conn.php');
-}
+require_once '../carica_env.php';
+require_once '../conn_ok.php';
 
 $ut = intval($_GET['ut']) ?? null;
 $data = $_GET['data_percorsi'] ?? null;

@@ -25,11 +25,8 @@ require_once('./req.php');
 the_page_title();
 
 
-if ($_SESSION['test']==1) {
-    require_once ('./conn_test.php');
-} else {
-    require_once ('./conn.php');
-}
+require_once 'carica_env.php';
+require_once 'conn_ok.php';
 
 
 
@@ -361,6 +358,8 @@ function updateAll() {
       return;
     } else if (causale_all === '100'){
       $('#punteggio_tutto option[value=100]').prop("selected", true);
+      var punteggio_all = $('select#punteggio_tutto').find(":selected").val();
+      console.log('Punteggio '+punteggio_all);
     } else { 
       var punteggio_all = $('select#punteggio_tutto').find(":selected").val();
       console.log('Punteggio '+punteggio_all);
@@ -369,6 +368,9 @@ function updateAll() {
         $("#ConsOutput").html('<br><div class="alert alert-danger alert-animated" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> Selezionare una % di completamento</div>').fadeIn("slow");
         return;
       } else if (causale_all != '100' && punteggio_all==='100'){
+        $("#ConsOutput").html('<br><div class="alert alert-danger alert-animated" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> Causale e punteggio non compatibili</div>').fadeIn("slow");
+        return;
+      } else if (causale_all === '100' && punteggio_all!='100'){
         $("#ConsOutput").html('<br><div class="alert alert-danger alert-animated" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> Causale e punteggio non compatibili</div>').fadeIn("slow");
         return;
       }
@@ -462,6 +464,18 @@ window.stateFormatter = (value, row, index) => {
 
   
 function rowStyle(row, index) {
+
+  // NON selezionata
+  /*if (!row.state) {
+    return {
+      classes: 'text-wrap non-selezionata',
+      css: {
+        "background-color": "#FFB6C1"
+      }
+    }
+  }*/
+
+
   // previsto e fatto o da consuntivare
   if (row.check_previsto === '1' && (row.id_causale === '100' || (!row.id_causale))) {
     return {
@@ -485,7 +499,7 @@ function rowStyle(row, index) {
   } else if (row.check_previsto === '0' && (!row.id_causale) ){
     return {
       classes: 'text-wrap non-previsto',
-      css: {"background-color": "pink"}
+      css: {"background-color": "#FFB6C1"}
     } 
   }
   
@@ -549,6 +563,22 @@ function causaleForm(value, row, index) {
         '</select>'//,
         //'</form>'
       ].join(''); 
+    } else if (row.check_previsto === '0'){
+      return [
+      //'<form action="" autocomplete="off" id="insert_'+row.tappa+'">',
+        '<select id="insert_'+row.tappa+'"  class="show-tick form-select" data-live-search="true" onclick="update_p()"  disabled="" name="causale" id="causale" required="">',
+        '<option name="causale" value="">Seleziona una causale</option>',  
+        <?php 
+        $query="select id, descrizione from spazzamento.causali_testi ct  
+        where descrizione = 'COMPLETATO'";
+        $result = pg_query($conn_hub, $query);
+        while($r = pg_fetch_assoc($result)) {
+        ?>
+            '<option name="causale" value="<?php echo trim($r["id"]);?>"><?php echo $r["descrizione"] ;?></option>',
+				<?php } ?>
+        '</select>'//,
+        //'</form>'
+      ].join('');
     } else {
           return [
       //'<form action="" autocomplete="off" id="insert_'+row.tappa+'">',

@@ -158,18 +158,25 @@ $(function() {
 $problemi =  'contattare l\'<a href="mailto:assterritorio@amiu.genova.it">amministratore di sistema</a>';
 
 
-
+require_once 'carica_env.php';
 
 function the_page_title()
 {
-    $page_name = getcwd(); // getcwd() gets the directory of the file you call the function from
+    /*$page_name = getcwd(); // getcwd() gets the directory of the file you call the function from
     $each_page_name = explode('/', $page_name);
     $len_page_dir = count($each_page_name) -1;
     $temp = explode('_', $each_page_name[$len_page_dir]);
     $len_temp=count($temp)-1;
-    if ($temp[$len_temp]=='totem'){
-        $_SESSION['test']=0;
-    } else if($temp[$len_temp]=='test') {
+    */
+    $app_env = $_ENV['APP_ENV'] ?? null;
+    //echo $app_env."<br>";
+
+
+    if ($app_env == 'prod') {
+        $test=0;
+        //if ($temp[$len_temp]=='totem'){
+        //$_SESSION['test']=0;
+    } else if($app_env =='test') {
         ?>
         <style>
             .navbar {
@@ -178,9 +185,12 @@ function the_page_title()
         </style>
         <?php
         $test=1;
-        $_SESSION['test']=1;
+        //$_SESSION['test']=1;
     } else {
-        echo "L'indirizzo è sbagliato. Contattare l'amministratore di sistema assterritorio@amiu.genova.it";
+        die("Non riconosco l'ambiente di esecuzione. 
+        Controlla la variabile APP_ENV in .env 
+        e assicurati che sia valorizzata correttamente 
+        (prod o test).");
     }
     return $test;
 }

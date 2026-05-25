@@ -48,13 +48,10 @@ require_once('./req.php');
 
 the_page_title();
 
-echo $test;
+//echo $test;
 
-if ($_SESSION['test']==1) {
-    require_once ('./conn_test.php');
-} else {
-    require_once ('./conn.php');
-}
+require_once 'carica_env.php';
+require_once 'conn_ok.php';
 
 
 

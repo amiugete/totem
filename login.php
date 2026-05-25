@@ -10,6 +10,15 @@ Version: 1.0
 session_start();
 $lifetime=86400;
 
+require_once 'carica_env.php';
+require_once 'conn_ok.php';
+
+require_once 'req.php';
+the_page_title();
+
+
+
+//echo $test."<br>";
 
 // unset cookies
 if (isset($_SERVER['HTTP_COOKIE'])) {
@@ -39,13 +48,7 @@ if(!isset($_COOKIE['origine'])) {
 
 
 
-if ($_SESSION['test']==1) {
-    require_once ('./conn_test.php');
-} else {
-    require_once ('./conn.php');
-}
 
-require_once("req.php");
 
 
 $successMessage = "";
@@ -141,7 +144,12 @@ $("body").css("margin-top", "77px");
 			if ($errorMessage != "") echo "<h3 style='color:red;'>$errorMessage</h3>";
 			//if ($successMessage != "") echo "<h3 style='color:blue;'>$successMessage</h3>";
 		?>
-		<h3 style="color:orange">Inserisci credenziali AMIU </h3>
+		<h3 style="color:orange">Inserisci credenziali AMIU 
+
+		<?php 
+		$app_env = $_ENV['APP_ENV'] ?? null;
+		if ($app_env== 'test'){ echo ' - <i class="bi bi-code"></i> Ambiente di test';}?>
+		</h3>
 		<form action="" method="post" style="display:inline-block;">
         <div class="row g-3 align-items-center">
 			<div class="form-group">

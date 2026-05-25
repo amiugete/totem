@@ -140,3 +140,14 @@ $("body").on("submit", "form", function () {
     });
 
 </script>
+
+
+
+<!-- richiamo il keepalive della sessione PHP -->
+<script>
+setInterval(() => {
+  fetch('/keepalive.php', {
+    credentials: 'include'
+  });
+}, 300000);
+</script>

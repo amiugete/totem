@@ -2,11 +2,8 @@
 session_start();
 
 
-if ($_SESSION['test']==1) {
-    require('../conn_test.php');
-} else {
-    require('../conn.php');
-}
+require_once '../carica_env.php';
+require_once '../conn_ok.php';
 
 $data = $_GET['data_percorsi'] ?? null;
 $last_uo = $_GET['last_uo'] ?? null;

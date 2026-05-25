@@ -6,11 +6,8 @@ $giorni_indietro=60;
 
 //require_once('./check_utente.php');
 
-if ($_SESSION['test']==1) {
-    require_once('./conn_test.php');
-} else {
-    require_once('./conn.php');
-}
+require_once 'carica_env.php';
+require_once 'conn_ok.php';
 
 // Faccio il controllo su SIT (sempre produzione non test)
 

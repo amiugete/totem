@@ -6,11 +6,8 @@ header('Content-Type: application/json; charset=utf-8');
 
 
 
-if ($_SESSION['test']==1) {
-    require_once ('../conn_test.php');
-} else {
-    require_once ('../conn.php');
-}
+require_once '../carica_env.php';
+require_once '../conn_ok.php';
 
 
 
@@ -63,6 +60,11 @@ FROM (
         e.datainsert,
         e.fatto
     FROM raccolta.cons_percorsi_raccolta_amiu cpra
+    /* faccio distinct on (tappa) per dare un solo valore
+     * 	con l' ORDER BY decido  
+         * se UT vince su operatore (e.substr(e.codice,0,2) desc)
+         * a parità di UT vince l'ultima arrivata 
+         * */
     LEFT JOIN (
         SELECT DISTINCT ON (tappa)
             tappa,
@@ -72,7 +74,13 @@ FROM (
             fatto
         FROM raccolta.v_effettuati
         WHERE datalav = TO_DATE($1, 'DD/MM/YYYY')
-        ORDER BY tappa, datainsert DESC
+        ORDER BY tappa, 
+        /* tappa essendo nel distinct on deve esserci per forza*/
+        case
+	        when substr(codice,0,2) = 'UT' then 'UT'
+	        else 'AA'
+        end desc,
+        datainsert DESC
     ) e ON e.tappa = cpra.id_tappa
     WHERE TO_DATE($1, 'DD/MM/YYYY') BETWEEN data_inizio AND data_fine
       AND id_percorso = $2
