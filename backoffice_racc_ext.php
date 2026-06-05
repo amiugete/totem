@@ -272,7 +272,7 @@ if ($hour < '1120'){
       <select id="causale_tutto_ne"  class="show-tick form-select" data-live-search="true" name="causale_tutto_ne" required="">
       <option name="causale" value="">Seleziona la causale</option>
       <?php 
-      $query="select id, descrizione from raccolta.causali_testi ct  where descrizione not like 'TERMINATO SENZA DISSERVIZI' order by 2";
+      $query="select id, descrizione from raccolta.causali_testi ct  where id::int not in (100, 110) order by 2";
       $result = pg_query($conn_hub, $query);
       while($r = pg_fetch_assoc($result)) {
         ?>
