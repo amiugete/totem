@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 # definisco quanto andare indietro con i giorni
 $giorni_indietro=60;

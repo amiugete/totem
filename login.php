@@ -7,7 +7,9 @@ Description: example script for ldap authentication in PHP
 Version: 1.0
 */
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 $lifetime=86400;
 
 require_once 'carica_env.php';

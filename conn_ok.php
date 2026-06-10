@@ -1,8 +1,29 @@
 <?php
 
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+if ($_ENV['APP_ENV'] === 'test') {
+    define('BASE_URL', '/totem_test');
+} else {
+    define('BASE_URL', '/totem');
+}
+$timeout = 6*60*60; //secondi 
+
+if (isset($_SESSION['last_activity'])) {
+    if (time() - $_SESSION['last_activity'] > $timeout) {
+        session_unset();
+        session_destroy();
+        http_response_code(401); // Unauthorized
+        echo 'Sessione scaduta. <a href="#" onclick="location.reload()">Ricarica la pagina</a>.';
+        exit;
+    }
+}
+
+$_SESSION['last_activity'] = time();
+
 
 // legge dal file ENV
 $host_an = $_ENV['DB_AN_HOST'] ?? null;

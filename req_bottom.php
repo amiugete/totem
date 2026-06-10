@@ -145,9 +145,53 @@ $("body").on("submit", "form", function () {
 
 <!-- richiamo il keepalive della sessione PHP -->
 <script>
+// keepalive sessione PHP 
 setInterval(() => {
-  fetch('/keepalive.php', {
-    credentials: 'include'
-  });
-}, 300000);
+    fetch("keepalive.php", {
+        credentials: "same-origin"
+    })
+    .then(async (res) => {
+
+        if (res.status === 401) {
+            const data = await res.json();
+
+            $("#ConsOutput2").html(`
+                <div class="alert alert-danger">
+                    ❌ ${data.message}<br><br>
+                    <a href="./login.php">Vai al login</a>
+                </div>
+            `);
+
+            return;
+        }
+
+        return res.json();
+    })
+    .then(data => {
+        if (data) {
+            console.log("sessione attiva --> time:", data.time);
+        }
+    })
+    .catch(err => {
+        console.error("Errore keepalive:", err);
+    });
+
+}, 5 * 60 * 1000);
+
+
+
+
+
+
+
+// timeout dopo 6 ore 
+// (6 h
+// *60 minuti 
+// *60 secondi 
+// *1000 millisecondi
+setTimeout(function () {
+    console.log('Sessione scaduta, reindirizzamento alla login');
+    window.location.href = "login.php";
+}, 6*60*60*1000);
+
 </script>

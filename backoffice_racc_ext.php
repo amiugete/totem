@@ -1,6 +1,8 @@
 <?php
 //session_set_cookie_params($lifetime);
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 setcookie("username", 'Amiu1', [
   'expires' => time() + 86400,
@@ -661,14 +663,14 @@ window.consEvents3 = {
             });
             console.log('refresh tabella fatto');
             },
-            error: function (xhr, textStatus, errorThrown, response) {
+            error: function (xhr, textStatus, errorThrown) {
                 console.error("Errore AJAX:", textStatus, errorThrown);
 
                 $("#ConsOutput2").html(`
                   <div class="alert alert-danger alert-animated" role="alert">
                     ❌ Errore durante l'elaborazione della richiesta.<br>
                     <b>Dettagli:</b> ${errorThrown ||'Errore sconosciuto'}<br>
-                    ${response}<br>
+                    ${xhr.responseText}<br>
                     Verifica la connessione o riprova più tardi.
                   </div>
                 `).fadeIn("slow");

@@ -1,6 +1,8 @@
 <?php
 //session_set_cookie_params($lifetime);
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 setcookie("username", 'Amiu1', [
   'expires' => time() + 86400,
@@ -91,6 +93,7 @@ $name=dirname(__FILE__);
 
   <div class="row">
 
+  
 
     <div class="col">
       <a type="button" class="btn btn-primary" href="./backoffice_racc_ext.php">

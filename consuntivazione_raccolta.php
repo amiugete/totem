@@ -1,7 +1,9 @@
 <?php
 //session_set_cookie_params($lifetime);
-session_start();
-
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$res_ok=0;
 ?>
 <!DOCTYPE html>
 <html lang="en">

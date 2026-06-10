@@ -6,15 +6,22 @@ function redirect($url)
     exit;
 }
 
-session_start();
 
 // =========================
 // CONFIG
 // =========================
-$lifetime = 86400; // cookie 1 giorno
-$timeout  = 8 * 60 * 60; // 8 ore sessione logica
+$lifetime = 86400; // secondi per sessione logica
 
+$timeout  = 6 * 60 * 60; // 6 ore sessione logica
+
+ini_set('session.gc_maxlifetime', $lifetime);
 session_set_cookie_params($lifetime);
+
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 
 // =========================
 // KEEP ALIVE LOGICO
