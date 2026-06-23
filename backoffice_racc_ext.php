@@ -250,7 +250,18 @@ if ($hour < '1120'){
 </script>
 
 
+<script>
 
+  function flagCambiato(el) {
+    if (el.checked) {
+        // Mostra tutto (rimuove il filtro)
+        $('#totem_percorsi').bootstrapTable('filterBy', {});
+    } else {
+        // Filtra: mostra solo editing = 1
+        $('#totem_percorsi').bootstrapTable('filterBy', { editing: "1" });
+    }
+}
+</script>
 
 <hr>
 
@@ -295,6 +306,15 @@ if ($hour < '1120'){
       </div-->
     
       <div id="toolbar" class="isDisabled"> 
+
+
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" 
+        id="flag_editing" name="flag_editing" 
+        title="Per vedere consuntivazione percorsi con piazzole nell'UT selezionata"
+        onchange="flagCambiato(this)">
+        <label class="form-check-label fw-bold ms-2" for="flag_editing">Mostra anche percorsi eseguiti da altre UT / rimesse</label>
+      </div>
       <!--a target="_new" class="btn btn-primary btn-sm"
          href="./export_consuntivazione_ekovision.php"><i class="fa-solid fa-file-excel"></i> Esporta xlsx completo</a-->
       </div>
@@ -382,11 +402,22 @@ $(function() {
     $table.bootstrapTable();
   });
   
+// CONTROLLO LO STATO DEL FLAG EDITING E LANCIO FUNZIONE PER FARE FILTRO 
+var filtroInizialeApplicato = false;
+
+$table.on('post-body.bs.table', function () {
+    if (!filtroInizialeApplicato) {
+        filtroInizialeApplicato = true;
+        console.log('Controlli il filtro sui percorsi');
+        var el = document.getElementById('flag_editing');
+        flagCambiato(el);
+    }
+});
 
 
 
 
-  var opzioni = ['COMPLETATO', 'NON CONSUNTIVATO', 'NON CONSUNTIVATO NO AUTISTA', 'NON COMPLETATO', 'NON EFFETTUATO'] ;
+var opzioni = ['COMPLETATO', 'NON CONSUNTIVATO', 'NON CONSUNTIVATO NO AUTISTA', 'NON COMPLETATO', 'NON EFFETTUATO'] ;
 
 function nameFormatterStato(value, row, index) {
   if (row.stato_consuntivazione =='COMPLETATO'){
@@ -504,11 +535,20 @@ function operateFormatter(value, row, index) {
 
 
 function consFormatter2(value, row, index) {
-      return [
-        '<a class="info btn btn-warning btn-sm" id="cons" data-bs-toggle="modal" title="Visualizza dettagli cons percorso '+row.id_percorso+'" data-bs-target="#viewMemberModal">',
-        '<i class="fa-regular fa-square-caret-down"></i>',
-        '</a>'
-      ].join('');
+  if (row.editing == 1 ){
+    return [
+      '<a class="info btn btn-warning btn-sm" id="cons" data-bs-toggle="modal" title="Visualizza dettagli cons percorso '+row.id_percorso+'" data-bs-target="#viewMemberModal">',
+      '<i class="fa-regular fa-square-caret-down"></i>',
+      '</a>'
+    ].join('');
+  } else {
+    return [
+      '<a class="info btn btn-info btn-sm" id="cons" data-bs-toggle="modal" title="Visualizza dettagli cons percorso '+row.id_percorso+'" data-bs-target="#viewMemberModal">',
+      '<i class="fa-regular fa-square-caret-down"></i>',
+      '</a>'
+    ].join('');
+
+  }
 };
 
 
@@ -524,7 +564,7 @@ window.consEvents = {
         $.ajax({   
             type: "POST",
             url: "report_totem_percorsi_cons_r.php",
-            data: 'id=' + id + '&datalav='+datalav +'&consuntivatore=UT<?php echo str_pad((string)$uos, 2, "0", STR_PAD_LEFT);?>',
+            data: 'edit=' + row.editing+ '&id=' + id + '&datalav='+datalav +'&consuntivatore=UT<?php echo str_pad((string)$uos, 2, "0", STR_PAD_LEFT);?>',
             dataType: "text",                  
             success: function(response){                    
                 $(".modal-body").html(response); 
@@ -580,7 +620,7 @@ window.consEvents = {
 // rendi non eseguito
 
 function consFormatter3(value, row, index) {
-      if (row.stato_consuntivazione.startsWith('NON CONSUNTIVATO') && row.in_previsione == 'PREVISTO') {
+      if (row.stato_consuntivazione.startsWith('NON CONSUNTIVATO') && row.in_previsione == 'PREVISTO' && row.editing == 1) {
         if (row.stato_consuntivazione =='NON CONSUNTIVATO' && row.uo_esec.includes(',') && (<?php echo $uos;?> === 16 || <?php echo $uos;?> === 17)) {
           <?php 
           //echo $role_SIT;
@@ -916,7 +956,6 @@ aggiornaBottoniNavigazione();
 
   //$('#myIframe').attr('src', "https://expo.wingsoft.it/amiu/webapp/indexdesk.php?operatore=0170"); 
  
-
 
 </script>
 

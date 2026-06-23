@@ -25,7 +25,7 @@ echo $_GET["uos"] ;
 $id=$_GET['id'];
 $datalav=$_GET['datalav'];
 $id_uo=$_GET['id_uo'];
-
+$edit= intval($_GET['edit']);
 /*echo $id.'<br>';
 echo $datalav.'<br>';
 exit();
@@ -35,17 +35,8 @@ exit();
 if(!$conn_hub) {
     die('Connessione fallita !<br />');
 } else {
- 
-    
-$query0="
-SELECT 
-    s1.*, 
-    CASE 
-        WHEN check_previsto = 1 OR id_causale IS NOT NULL THEN 1
-        ELSE 0
-    END AS check_prev_cons
-FROM (
-    SELECT DISTINCT 
+
+    $subquery="SELECT DISTINCT 
         cpra.id_tappa AS tappa, 
         cpra.id_percorso AS idpercorso, 
         cpra.desc_uo AS zona,
@@ -85,50 +76,82 @@ FROM (
         datainsert DESC
     ) e ON e.tappa = cpra.id_tappa
     WHERE TO_DATE($1, 'DD/MM/YYYY') BETWEEN data_inizio AND data_fine
-      AND id_percorso = $2
-      AND id_uo = $3
-) AS s1
-ORDER BY check_prev_cons DESC, 1;";
+      AND id_percorso = $2";
+      
+    if ($edit == 1) { 
+        $subquery = $subquery . " AND id_uo = $3";
+    } else {
+        $subquery = $subquery . " AND id_uo = (select max(id_uo) 
+      		from raccolta.cons_percorsi_raccolta_amiu cpra
+      		where TO_DATE($1, 'DD/MM/YYYY') BETWEEN data_inizio AND data_fine
+      	AND id_percorso = $2)";
+    }
 
 
-//echo $query0;
-//echo $uos;
-//echo "Sono qua";
+    $query0="
+    SELECT 
+        s1.*, 
+        CASE 
+            WHEN check_previsto = 1 OR id_causale IS NOT NULL THEN 1
+            ELSE 0
+        END AS check_prev_cons
+    FROM (
+        ".$subquery."  
+        ) AS s1
+    ORDER BY check_prev_cons DESC, 1;";
 
 
-
-$result = pg_prepare($conn_hub, "query0", $query0);
-
-if (!pg_last_error($conn_hub)){
-    #$res_ok=0;
-} else {
-    pg_last_error($conn_hub);
-    $res_ok= $res_ok+1;
-}
-//echo "Sono qua 2";
-$result = pg_execute($conn_hub, "query0", array($_GET['datalav'], $_GET["id"], $_GET["id_uo"]));  
-if (!pg_last_error($conn_hub)){
-    #$res_ok=0;
-} else {
-    pg_last_error($conn_hub);
-    $res_ok= $res_ok+1;
-}
-//echo "Sono qua 3";
-
-
-$rows = array();
-while($r = pg_fetch_assoc($result)) {
-    $rows[] = $r;
-    //echo $r['piazzola'];
-}
-        
-
-
-require_once("./json_no_paginazione.php");
+    //echo $query0;
+    //echo $uos;
+    //echo "Sono qua";
 
 
 
-exit(0);
+    $result = pg_prepare($conn_hub, "query0", $query0);
+
+    if (!pg_last_error($conn_hub)){
+        #$res_ok=0;
+    } else {
+        echo pg_last_error($conn_hub);
+        $res_ok= $res_ok+1;
+    }
+    //echo "Sono qua 2";
+
+
+     if ($edit == 1) { 
+        $result = pg_execute($conn_hub, "query0", array($_GET['datalav'], $_GET["id"], $_GET["id_uo"]));  
+        if (!pg_last_error($conn_hub)){
+            #$res_ok=0;
+        } else {
+            echo pg_last_error($conn_hub);
+            $res_ok= $res_ok+1;
+        }
+        //echo "Sono qua 3";
+     } else {
+        $result = pg_execute($conn_hub, "query0", array($_GET['datalav'], $_GET["id"]));  
+        if (!pg_last_error($conn_hub)){
+            #$res_ok=0;
+        } else {
+            echo pg_last_error($conn_hub);
+            $res_ok= $res_ok+1;
+        }
+        //echo "Sono qua 3";
+
+     }
+
+    $rows = array();
+    while($r = pg_fetch_assoc($result)) {
+        $rows[] = $r;
+        //echo $r['piazzola'];
+    }
+            
+
+
+    require_once("./json_no_paginazione.php");
+
+
+
+    exit(0);
 }
 
 

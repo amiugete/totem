@@ -51,6 +51,9 @@ require_once 'conn_ok.php';
 
 //require_once("select_ut.php");
 
+$edit = $_POST['edit'];
+// edit può valere 1 o 0
+
 $id = $_POST['id'];
 $datalav= $_POST['datalav'];
 // cerco la descrizione del percos
@@ -271,7 +274,8 @@ function closeToast() {
 
 
       <hr>
-      <div class="row row-cols g-3">
+      <?php if (intval($edit) ==  1){ ?> 
+      <div id="editing" class="row row-cols g-3">
       
       <div class="col-3 text-start">
       <select id="causale_tutto"  class="show-tick form-select" data-live-search="true" name="causale_tutto" required="">
@@ -360,7 +364,14 @@ order by 2";
       </form>
       </div>
       </div>
-
+      <?php }  else { ?>
+      <div id="editing" class="row text-center">
+      <h5>
+        <i class="bi bi-shield-fill-minus"></i> Percorso in sola visualizzazione <i class="bi bi-shield-fill-minus"></i>
+      </h5>
+      <hr>  
+    </div>
+      <?php }?>
 
 
 
@@ -394,7 +405,7 @@ order by 2";
         data-show-columns="false"
 				data-filter-control="false"
         data-sort-select-options = "true"
-        data-url="./tables/report_totem_percorsi_cons_r.php?id=<?php echo $id;?>&datalav=<?php echo $datalav;?>&id_uo=<?php echo $id_uo;?>" 
+        data-url="./tables/report_totem_percorsi_cons_r.php?edit=<?php echo $edit;?>&id=<?php echo $id;?>&datalav=<?php echo $datalav;?>&id_uo=<?php echo $id_uo;?>" 
         data-toolbar="#toolbar1" 
         data-show-toolbar="false"
         data-show-footer="false"

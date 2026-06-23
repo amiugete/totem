@@ -47,6 +47,7 @@ $query0="select descr_orario,
 descr_servizio, id_percorso, 
 descr_percorso,
 uo_esec,
+uo,
 causali, 
 causali_text,
 case 
@@ -60,13 +61,17 @@ case
 	when causali is null and no_autista = 0 then 'NON CONSUNTIVATO'
 	when causali is null and no_autista = 1 then 'NON CONSUNTIVATO NO AUTISTA'
 end stato_consuntivazione, datalav,
-id_percorso as id_percorso1
+id_percorso as id_percorso1,
+case 
+	when $2 = any(id_uo_esec) then 1
+	else 0
+end as editing
 from (
 	select descr_orario,
 	descr_servizio, id_percorso, descr_percorso, 
 	string_agg(distinct desc_uo, ',') as uo_esec,
 	array_agg(distinct id_uo_esec) as id_uo_esec,
-	/*array_agg(distinct id_uo) as uo,*/
+	array_agg(distinct id_uo) as uo,
 	sum(
 		check_previsto
 	) as check_previsto,
@@ -77,7 +82,7 @@ from (
 		select at2.descr_orario,
 		cpra.desc_servizio as descr_servizio, cpra.id_percorso, cpra.desc_percorso as descr_percorso, 
 		cpra.desc_uo, cpra.id_uo as id_uo_esec,
-		--pu.id_uo,
+		pu.id_uo,
 		case 
 			when (trim(replace(ea.causale, ' - (no in questa giornata)', '')) = '') then 'COMPLETATO'
 			else trim(replace(ea.causale, ' - (no in questa giornata)', '')) 
@@ -99,7 +104,7 @@ from (
 		from raccolta.cons_percorsi_raccolta_amiu cpra
 		left join raccolta.anagr_turni at2 on at2.id_turno = cpra.id_turno
 		--left join raccolta.tipi_rifiuto tr on tr.nome= cpra.tipo_rifiuto 
-		--left join spazzamento.aste_ut pu on pu.id_asta=cpra.id_asta
+		left join raccolta.piazzole_ut pu on pu.id_piazzola=cpra.id_piazzola
 		left join raccolta.v_effettuati ea on ea.tappa::bigint = cpra.id_tappa::bigint 
 											and ea.datalav = to_date($1, 'DD/MM/YYYY')
 		left join raccolta.percorsi_no_autista_x_ekovision na 
@@ -111,8 +116,13 @@ from (
 	group by descr_servizio, id_percorso, descr_percorso, descr_orario,datalav, no_autista
 ) as step1
 where /*(causali is not null or check_previsto > 0) and */ 
-($2 = any(id_uo_esec))
-order by 8 desc, 1, 2, 4
+($2 = any(uo))
+and not (
+    check_previsto = 0
+    and causali is null
+    and not ($2 = any(id_uo_esec))
+  )
+order by 13 desc,  9 desc, 1, 2, 4
             ";
 
 
