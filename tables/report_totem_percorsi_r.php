@@ -116,12 +116,20 @@ from (
 	group by descr_servizio, id_percorso, descr_percorso, descr_orario,datalav, no_autista
 ) as step1
 where /*(causali is not null or check_previsto > 0) and */ 
-($2 = any(uo))
+--modificata condizione il 01/07 perchè non mostrava nulla per le ditte terze in quanto uo non contiene mai l'id della ditta
+--la condizione originale escludeva anche per le ut i percorsi eseguiti dall'ut ma che  non avevano piazzole associate all'ut stessa
+/*($2 = any(uo))
 and not (
     check_previsto = 0
     and causali is null
     and not ($2 = any(id_uo_esec))
-  )
+  )*/
+($2 = any(uo) or $2 = any(id_uo_esec))
+and (
+    check_previsto <> 0
+    or causali is not null
+    or $2 = any(id_uo_esec)
+)
 order by 13 desc,  9 desc, 1, 2, 4
             ";
 
