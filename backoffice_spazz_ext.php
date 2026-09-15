@@ -254,7 +254,10 @@ if ($hour < '1120'){
 
 <div id="tabella">
             
-        <h4>Report consuntivazione spazzamento da totem - <?php echo $uos_descrizione;?></h4> 
+        <h4>
+          <i class="fa-solid fa-broom"></i>
+          Report consuntivazione igiene da totem - <?php echo $uos_descrizione;?>
+        </h4> 
 
         <!-- Button trigger modal -->
 <!--button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
