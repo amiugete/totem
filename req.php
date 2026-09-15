@@ -205,4 +205,4 @@ function the_page_title()
 <script src="./node_modules/xlsx/dist/xlsx.full.min.js"></script>
 
 <!-- script JS per recuperare i dati della tabella filtrati e non e scaricarli in excel -->
-<script src="./js/tableExport.js">
+<script src="./js/tableExport.js"></script>
