@@ -892,16 +892,16 @@
         },
         {
             "name": "wenzhixin/bootstrap-table",
-            "version": "1.24.1",
+            "version": "1.27.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/wenzhixin/bootstrap-table.git",
-                "reference": "933c804fee7edb22e4efd35de255b431dbab99bc"
+                "reference": "fdbc948054c24bf0131af5b9b7fd94fd2ea64b4a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wenzhixin/bootstrap-table/zipball/933c804fee7edb22e4efd35de255b431dbab99bc",
-                "reference": "933c804fee7edb22e4efd35de255b431dbab99bc",
+                "url": "https://api.github.com/repos/wenzhixin/bootstrap-table/zipball/fdbc948054c24bf0131af5b9b7fd94fd2ea64b4a",
+                "reference": "fdbc948054c24bf0131af5b9b7fd94fd2ea64b4a",
                 "shasum": ""
             },
             "require": {
@@ -939,7 +939,7 @@
             ],
             "support": {
                 "issues": "https://github.com/wenzhixin/bootstrap-table/issues",
-                "source": "https://github.com/wenzhixin/bootstrap-table/tree/1.24.1"
+                "source": "https://github.com/wenzhixin/bootstrap-table/tree/1.27.3"
             },
             "funding": [
                 {
@@ -951,16 +951,16 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2025-03-02T12:04:23+00:00"
+            "time": "2026-04-23T23:51:34+00:00"
         }
     ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
-    "platform-dev": [],
-    "plugin-api-version": "2.2.0"
+    "platform": {},
+    "platform-dev": {},
+    "plugin-api-version": "2.9.0"
 }

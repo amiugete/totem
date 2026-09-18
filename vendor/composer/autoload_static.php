@@ -11,46 +11,46 @@ class ComposerStaticInit10fd51bd1f33e35023899e3433691e4c
     );
 
     public static $prefixLengthsPsr4 = array (
-        'S' => 
+        'S' =>
         array (
             'Symfony\\Component\\Process\\' => 26,
         ),
-        'O' => 
+        'O' =>
         array (
             'OomphInc\\ComposerInstallersExtender\\' => 36,
         ),
-        'C' => 
+        'C' =>
         array (
             'Composer\\Installers\\' => 20,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'Symfony\\Component\\Process\\' => 
+        'Symfony\\Component\\Process\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/process',
         ),
-        'OomphInc\\ComposerInstallersExtender\\' => 
+        'OomphInc\\ComposerInstallersExtender\\' =>
         array (
             0 => __DIR__ . '/..' . '/oomphinc/composer-installers-extender/src',
         ),
-        'Composer\\Installers\\' => 
+        'Composer\\Installers\\' =>
         array (
             0 => __DIR__ . '/..' . '/composer/installers/src/Composer/Installers',
         ),
     );
 
     public static $prefixesPsr0 = array (
-        'C' => 
+        'C' =>
         array (
-            'ComponentInstaller' => 
+            'ComponentInstaller' =>
             array (
                 0 => __DIR__ . '/..' . '/robloach/component-installer/src',
             ),
         ),
-        'A' => 
+        'A' =>
         array (
-            'Assetic' => 
+            'Assetic' =>
             array (
                 0 => __DIR__ . '/..' . '/kriswallsmith/assetic/src',
             ),
