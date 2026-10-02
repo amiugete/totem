@@ -58,6 +58,7 @@
 <script src="./vendor/wenzhixin/bootstrap-table/dist/extensions/group-by-v2/bootstrap-table-group-by.min.js"></script>
 <script src="./vendor/wenzhixin/bootstrap-table/dist/extensions/i18n-enhance/bootstrap-table-i18n-enhance.min.js"></script>
 <script src="./vendor/wenzhixin/bootstrap-table/dist/extensions/export/bootstrap-table-export.min.js"></script>
+<script src="./vendor/wenzhixin/bootstrap-table/dist/extensions/sticky-header/bootstrap-table-sticky-header.min.js"></script>
 
 
 

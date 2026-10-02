@@ -57,6 +57,7 @@ $partenza_ekovision= "20/11/2023";
 <link rel="stylesheet" href="./vendor/wenzhixin/bootstrap-table/dist/bootstrap-table.min.css">
 <link rel="stylesheet" href="./vendor/wenzhixin/bootstrap-table/dist/extensions/filter-control/bootstrap-table-filter-control.css">
 <link rel="stylesheet" href="./vendor/wenzhixin/bootstrap-table/dist/extensions/group-by-v2/bootstrap-table-group-by.min.css">
+<link rel="stylesheet" href="./vendor/wenzhixin/bootstrap-table/dist/extensions/sticky-header/bootstrap-table-sticky-header.min.css">
 
 
 <!-- BOOTSTRAP SELECT  problem version 1.13 with bootstrap 5-->
