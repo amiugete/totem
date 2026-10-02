@@ -37,6 +37,43 @@ require_once 'conn_ok.php';
 
 ?> 
 
+<style>
+/* Stile checkbox tappe previste */
+.previsto input[type="checkbox"] {
+  pointer-events: none;
+  cursor: not-allowed;
+  /*opacity: 0.6;*/
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.pagina-consuntivazione {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* PARTE FISSA */
+.intestazione-tabella1 {
+    flex-shrink: 0;
+}
+
+.contenitore-tabella {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+</style>
 
 
 
@@ -46,7 +83,7 @@ require_once 'conn_ok.php';
 
 
 
-<div class="container">
+<div class="container pagina-consuntivazione">
 <?php 
 
 //require_once("select_ut.php");
@@ -117,7 +154,7 @@ while($r = pg_fetch_assoc($result)) {
 
 
 
-<div id="tabella1">
+<div id="intestazione-tabella1">
             
         <h4>Cod: <?php echo $id;?> - Desc: <?php echo $desc_percorso;?></h4> 
         <small>Data: <?php echo $datalav;?></small>
@@ -251,8 +288,10 @@ while($r = pg_fetch_assoc($result)) {
       <div id="ConsOutput" class="text-center">
 
       </div>
-
-
+      <hr>
+      </div>
+      <!-- fine parte fissa-->
+      <div class="contenitore-tabella">
         <div class="table-responsive-sm">
 
                   <!--div id="toolbar">
@@ -311,12 +350,16 @@ while($r = pg_fetch_assoc($result)) {
 <script type="text/javascript">
 
 
-
-var $table_tappe = $('#totem_percorsi_dettaglio_s');
+const $table_tappe = $('#totem_percorsi_dettaglio_s');
 
 $(function() {
-    $table_tappe.bootstrapTable();
+    $table_tappe.bootstrapTable({
+      stickyHeader: true,
+      stickyHeaderOffsetLeft: 0,
+      stickyHeaderOffsetRight: 0
+  });
 });
+
 
 
 $table_tappe.on('check.bs.table', function (e, row) {
@@ -328,6 +371,12 @@ $table_tappe.on('check.bs.table', function (e, row) {
 });
 
 $table_tappe.on('uncheck.bs.table', function (e, row) {
+  /*if (row.check_previsto === '1') {
+        console.log('Tappa: '+ row.tappa+ ' prevista non posso rimoverla');
+        $table_tappe.bootstrapTable('check', row.tappa);
+        return;
+    }*/
+
   console.log('Tappa: '+ row.tappa+ ' rimossa');
   //console.log(e);
   //$('#insert_'+row.tappa+' option:selected').find($('option')).
@@ -458,7 +507,7 @@ function getRowSelections() {
 window.stateFormatter = (value, row, index) => {
     if (row.check_prev_cons === '1') {
       return {
-        checked: true
+        checked: true, readonly: true
       }
     }
     //return value

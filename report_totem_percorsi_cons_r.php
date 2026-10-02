@@ -9,6 +9,46 @@ if (session_status() === PHP_SESSION_NONE) {
 <!DOCTYPE html>
 <html lang="en">
 
+
+<style>
+/* Stile checkbox tappe previste */
+.previsto input[type="checkbox"] {
+  pointer-events: none;
+  cursor: not-allowed;
+  /*opacity: 0.6;*/
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.pagina-consuntivazione {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* PARTE FISSA */
+.intestazione-tabella1 {
+    flex-shrink: 0;
+}
+
+.contenitore-tabella {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+</style>
+
+
 <head>
 
     <meta charset="utf-8">
@@ -46,7 +86,7 @@ require_once 'conn_ok.php';
 
 
 
-<div class="container">
+<div class="container pagina-consuntivazione">
 <?php 
 
 //require_once("select_ut.php");
@@ -192,18 +232,18 @@ function closeToast() {
 
 
 
-<div id="tabella1">
+<div id="intestazione-tabella1">
             
         <h4>Cod: <?php echo $id;?> - Desc: <?php echo $desc_percorso;?></h4> 
         <small>Data: <?php echo $datalav;?></small>
         <?php 
         if ($op){
           echo '<small>Operatore '.$consuntivatore . ' ('.$op.')</small>'; 
-        } else{
+        } else {
           echo ' <small>Sono su backoffice come '.$consuntivatore.'</small> ';
-          if ($_SESSION['test']==1) {
-            echo ' <small>Ambiente di test</small> ';
-          }
+        }
+        if ($_ENV['APP_ENV'] === 'test') {
+          echo '<font color="red"><small>Ambiente di test</small></font>';
         }
 
         ?>
@@ -380,11 +420,15 @@ order by 2";
       <div id="ConsOutput" class="text-center">
 
       </div>
-
+      <hr>  
+      
+      </div>
+      <!-- fine parte fissa-->
+      <div class="contenitore-tabella">
 
         <div class="table-responsive-sm">
 
-                  <!--div id="toolbar">
+        <!--div id="toolbar">
         <button id="showSelectedRows" class="btn btn-primary" type="button">Crea ordine di lavoro</button>
       </div-->
     
