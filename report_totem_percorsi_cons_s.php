@@ -73,6 +73,72 @@ require_once 'conn_ok.php';
     min-height: 0;
     overflow-y: auto;
 }
+
+.colonna-nascosta {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+}
+
+td.colonna-nascosta,
+th.colonna-nascosta {
+    display: none !important;
+}
+
+.icona-modificata {
+    color: #ff0000;
+    display: inline-block;
+    animation: matita-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes matita-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.35);
+        opacity: 0.55;
+    }
+}
+
+
+
+
+/* Compatto la tabella */
+#totem_percorsi_dettaglio_s {
+    font-size: 0.90rem;
+}
+
+#totem_percorsi_dettaglio_s th,
+#totem_percorsi_dettaglio_s td {
+    padding: 0.2rem 0.3rem !important;
+}
+
+#totem_percorsi_dettaglio_s select {
+    font-size: 0.78rem;
+}
+
+/* Intestazioni centrate verticalmente */
+#totem_percorsi_dettaglio_s thead th {
+vertical-align: middle !important;
+}
+ 
+/* Filtro leggermente più piccolo */
+#totem_percorsi_dettaglio_s thead input.form-control {
+  font-size: 0.70rem !important;
+  padding: 0.2rem 0.2rem;
+  height: auto;
+}
+
+
+#totem_percorsi_dettaglio_s .form-control {
+font-size: 0.70rem !important;
+}
 </style>
 
 
@@ -170,6 +236,11 @@ while($r = pg_fetch_assoc($result)) {
 
         ?>
     
+        <script type="text/javascript">
+          // passo la variabile consuntivatore a javascript
+          //const consuntivatore = <?= json_encode($consuntivatore) ?>;
+          window.consuntivatore = <?= json_encode($consuntivatore) ?>;
+        </script>
 
         <script type="text/javascript">
         
@@ -235,12 +306,18 @@ while($r = pg_fetch_assoc($result)) {
 
       <hr>
       <div class="row row-cols g-3">
-      <small>Seleziona una causale e la % di completamento da applicare su tratti selezionati</small>
+      <small>Seleziona una causale e la % di completamento da applicare sui tratti selezionati. 
+        Con il tasto applica le modifiche sono applicate a tutti i tratti, altrimenti clicca sulle righe che vuoi modificare.
+      </small>
       <div class="col-4 col-auto text-start">
       <select id="causale_tutto"  class="show-tick form-select" data-live-search="true" name="causale_tutto" required="">
       <option name="causale_tutto" value="">Seleziona la causale</option>
       <?php 
-      $query="select id, descrizione from spazzamento.causali_testi ct  where descrizione not like 'TERMINATO SENZA DISSERVIZI' order by 2";
+      $query="select id, descrizione from spazzamento.causali_testi ct  
+      where descrizione not like 'TERMINATO SENZA DISSERVIZI' 
+      and id not in (98, 102) /* tolgo anche la causale TAPPA AGGIUNTIVA c
+      che non è così chiara*/
+      order by 2";
       $result = pg_query($conn_hub, $query);
       while($r = pg_fetch_assoc($result)) {
         ?>
@@ -262,11 +339,10 @@ while($r = pg_fetch_assoc($result)) {
       
       </div>
       <div class="col-3 text-start">
-      <button onclick="updateAll()" class="btn btn-warning">
+      <button id="btnApplica" onclick="updateAll()" class="btn btn-warning">
       <i class="fa-solid fa-list-check"></i> Applica
       </button>
       </div>
-
       <div class="col-3 text-end">
       <form autocomplete="off" id="prospects_form" action="">
       <input type="hidden" class="form-control" id="datalav" name="datalav" value="<?php echo $datalav;?>">
@@ -278,6 +354,7 @@ while($r = pg_fetch_assoc($result)) {
       </div>
       </form>
       </div>
+      <span id="noteApplica"></span>
       </div>
 
 
@@ -287,6 +364,8 @@ while($r = pg_fetch_assoc($result)) {
       <!-- SPAZIO DEDICATO ALL'OUTPUT -->
       <div id="ConsOutput" class="text-center">
 
+      </div>
+      <div id="ConsOutputSave" class="text-center">
       </div>
       <hr>
       </div>
@@ -333,9 +412,10 @@ while($r = pg_fetch_assoc($result)) {
         <th data-field="tratto" data-sortable="true" data-visible="true" data-filter-control="input">Tratto</th>
         <th data-field="check_previsto" data-sortable="true" data-visible="false">Previsto</th>
         <!--th data-field="check_prev_cons" data-sortable="true" data-visible="false">Previsto</th-->
-        <th data-field="causale" data-sortable="true" data-visible="true" data-formatter="causaleForm">Causale</th>
-        <th data-field="punteggio" data-sortable="true" data-visible="true" data-formatter="punteggioForm">Punteggio</th>
-        <th data-field="" data-sortable="true" data-visible="true" data-formatter="consStato">Stato<br>consuntivazione</th>
+        <th data-field="causale" data-sortable="true" data-visible="true" data-formatter="causaleForm" data-class="colonna-nascosta">Causale</th>
+        <th data-field="punteggio" data-sortable="true" data-visible="true" data-formatter="punteggioForm" data-class="colonna-nascosta">Punteggio</th>
+        <th data-field="" data-sortable="true" data-visible="true" data-formatter="causalePunteggioForm">Cons</th>
+        <th data-field="" data-sortable="true" data-visible="true" data-formatter="consStato">Stato<br>cons</th>
         <!--th data-field="punteggio" data-sortable="true" data-visible="true" data-filter-control="select">% completamento</th> 
         <th data-field="causale" data-sortable="true" data-visible="true" data-filter-control="select">Causale</th> 
         <th data-field="operatore" data-sortable="true" data-visible="true" data-filter-control="select">Operatore</th-->
@@ -350,7 +430,7 @@ while($r = pg_fetch_assoc($result)) {
 <script type="text/javascript">
 
 
-const $table_tappe = $('#totem_percorsi_dettaglio_s');
+var $table_tappe = $('#totem_percorsi_dettaglio_s');
 
 $(function() {
     $table_tappe.bootstrapTable({
@@ -360,6 +440,121 @@ $(function() {
   });
 });
 
+
+
+// Rimuovo eventuali handler già registrati
+$table_tappe.off('click', 'select, input, button, a');
+$table_tappe.off('click-row.bs.table');
+
+
+
+$table_tappe.on('load-success.bs.table', function () {
+  controllaApplica();
+
+});
+
+
+
+function controllaApplica() {
+    //console.log('Sta girando la funzione controllaApplica');
+    var disabilita = false;
+
+    $table_tappe.bootstrapTable('getData').forEach(function(row) {
+
+        if (
+            row.codice !== null &&
+            row.codice !== '' &&
+            String(row.codice) !== String(consuntivatore) &&
+            !String(consuntivatore).startsWith('UT')
+        ) {
+            disabilita = true;
+        }
+
+    });
+
+    $('#btnApplica').prop('disabled', disabilita);
+    if (disabilita === true) {
+      $("#noteApplica").html('<small><i class="fa-solid fa-person-circle-exclamation"></i>Ci sono tappe consuntivate da altro operatore. Il tasto applica non può essere utilizzato</small>').fadeIn("slow");   
+    } 
+}
+
+
+$('#causale_tutto').on('change', function () {
+
+    const causale = $(this).val();
+    const $punteggio = $('#punteggio_tutto');
+
+    //console.log('Ho scelto causale '+causale);
+    if (causale === '100') {
+        // Causale 100 → può scegliere qualsiasi percentuale
+        $punteggio.find('option[value="100"]').prop('disabled', false);
+         // Se causale = 100, imposto automaticamente 100%
+        $punteggio.val('100');
+
+        // Disabilito tutte le opzioni tranne 100
+        $punteggio.find('option').each(function () {
+            $(this).prop('disabled', $(this).val() !== '100');
+        });
+    } else {
+
+        // Riabilito tutte le percentuali
+        $punteggio.find('option').prop('disabled', false);
+        
+        
+        //console.log('Controllo il punteggio che ora vale '+ $punteggio.val());
+        // Se era già selezionato 100, lo resetto
+        if ($punteggio.val() === '100') {
+            $punteggio.val('');
+        }
+        // Altre causali → 100% non consentito
+        $punteggio.find('option[value="100"]').prop('disabled', true);
+    }
+});
+
+
+
+$table_tappe.on('change', 'select[id^="insert_"]', function () {
+
+    const causale = $(this).val();
+
+    // Ricavo l'id della tappa
+    const tappa = this.id.replace('insert_', '');
+
+    // Select della percentuale della stessa riga
+    const $punteggio = $('#punteggio_' + tappa);
+
+    console.log('Per la tappa '+tappa +' ho scelto causale '+causale);
+    if (causale === '100') {
+
+        // Causale 100 → imposto automaticamente 100%
+        $punteggio.val('100');
+
+        // Disabilito tutte le percentuali tranne 100
+        $punteggio.find('option').prop('disabled', false);
+
+        $punteggio.find('option:not([value="100"])')
+            .prop('disabled', true);
+
+    } else {
+
+        // Riabilito tutte le percentuali
+        $punteggio.find('option').prop('disabled', false);
+
+        // Se era già 100, azzero
+        if ($punteggio.val() === '100') {
+            $punteggio.val('');
+        }
+         // 100% non consentito
+        $punteggio.find('option[value="100"]')
+            .prop('disabled', true);
+
+
+    }
+
+    var messaggio= '<br><div class="alert alert-warning alert-animated" role="alert"><i class="fa-solid fa-pencil"></i> Modifiche in corso. <b>Ricorda di salvare per rendere effettiva le modifiche.</b></div>';
+    $("#ConsOutputSave").html(messaggio).fadeIn("slow");
+    evidenziaRigaModificata($(this).closest('tr'));
+});
 
 
 $table_tappe.on('check.bs.table', function (e, row) {
@@ -396,8 +591,98 @@ $table_tappe.on('post-body.bs.table', function (e, row) {
   select_causale();
 });
 
+/*
+click sulla parte libera della riga → esegue la tua funzione
+click sul select → non esegue la funzione della riga
+click sull'eventuale checkbox → non esegue la funzione della riga
+click su un bottone → non esegue la funzione della riga
+*/
+
+$table_tappe.on('created-controls.bs.table', function () {
+    console.log('Cliccato su filtro');
+    $table_tappe.find('thead input.bootstrap-table-filter-control')
+        .attr('inputmode', 'text');
+});
 
 
+
+
+
+$table_tappe.on('click', 'tbody tr', function (e) {
+
+
+    const index = $(this).data('index');
+    const row = $table_tappe.bootstrapTable('getData')[index];
+
+    const causale = $('#causale_tutto').val();
+    const punteggio = $('#punteggio_tutto').val();
+
+    console.log('row.causale = '+row.causale);
+    console.log('row.punteggio = '+row.punteggio);
+
+    const isUT = String(window.consuntivatore).startsWith('UT');
+    const stessaPersona =
+        String(window.consuntivatore) === String(row.codice);
+
+    const giaCompletata =
+        row.codice !== null && row.codice !== '' && row.punteggio === '100';
+
+    console.log('isUT ' +isUT+' stessaPersona'+ stessaPersona +' giaCompletata '+ giaCompletata)
+    if (!isUT && giaCompletata && !stessaPersona) {
+      $("#ConsOutput").html('<br><div class="alert alert-warning alert-animated" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> Tappa già consuntivata come completata da '+row.codice+'. Non posso cambiare la consuntivazione. <br>In caso di problemi segnalare al RUT/assistente/GRIM</div>').fadeIn("slow");
+      $('#insert_' + row.tappa).prop('disabled', true);
+      $('#punteggio_' + row.tappa).prop('disabled', true);
+      return;
+    } else {
+      $("#ConsOutput").html('').fadeIn("slow");
+    }
+
+    // Se ho cliccato su un controllo, non considero il click come click sulla riga
+    if ($(e.target).closest('select, input, button, a').length) {
+        console.log('Click su select/input/button: esco');
+        $("#ConsOutput").html('').fadeIn("slow");
+        return;
+    }
+
+    console.log('CLICK SULLA RIGA');
+
+    
+
+
+
+
+    if (!causale) {
+      $("#ConsOutput").html('<br><div class="alert alert-warning alert-animated" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> Per modificare questa riga Selezionare una causale</div>').fadeIn("slow");
+      return;
+    }
+    if (!punteggio) {
+      $("#ConsOutput").html('<br><div class="alert alert-warning alert-animated" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> Selezionare una %</div>').fadeIn("slow");
+      return;
+    }
+    $("#ConsOutput").html('').fadeIn("slow");
+    console.log('Applico alla tappa ' + row.tappa);
+    console.log('Causale: ' + causale);
+    console.log('Punteggio: ' + punteggio);
+
+    $('#insert_' + row.tappa).val(causale);
+    $('#punteggio_' + row.tappa).val(punteggio);
+
+    aggiornaCons(row.tappa);
+    if (causale === '100') {
+      console.log('Causale 100');
+        $('#punteggio_' + row.tappa).prop('disabled', true);
+    } else {
+        console.log('Causale  diverso da 100');
+        $('#punteggio_' + row.tappa).prop('disabled', false);
+    }
+
+
+    // Evidenzio la riga modificata
+    var messaggio= '<br><div class="alert alert-warning alert-animated" role="alert"><i class="fa-solid fa-pencil"></i> Modifiche in corso. <b>Ricorda di salvare per rendere effettiva le modifiche.</b></div>';
+    $("#ConsOutputSave").html(messaggio).fadeIn("slow");
+    evidenziaRigaModificata($(this));
+
+}); 
 
 function updateAll() {
   console.log('Sono nella funzione updateAll')
@@ -427,19 +712,66 @@ function updateAll() {
       }
     }
     // messaggio OK
-    var messaggio= '<br><div class="alert alert-warning alert-animated" role="alert"> <i class="bi bi-exclamation-triangle-fill"></i> Le modifiche sono state applicate su tutti i tratti selezionati. <b>Ricorda di salvare per rendere effettiva la modifica.</b></div>';
-    console.log(messaggio);
-    $("#ConsOutput").html(messaggio).fadeIn("slow");
+    var messaggio= '<br><div class="alert alert-warning alert-animated" role="alert"> <i class="fa-solid fa-pencil"></i> Le modifiche sono state applicate su tutti i tratti selezionati. <b>Ricorda di salvare per rendere effettiva la modifica.</b></div>';
+    //console.log(messaggio);
+    $("#ConsOutputSave").html(messaggio).fadeIn("slow");
     return $.map($table_tappe.bootstrapTable('getSelections'), 
     function(row, index) {
         $('#insert_'+row.tappa+' option[value='+causale_all+']').prop("selected", true);
         $('#punteggio_'+row.tappa+' option[value='+punteggio_all+']').prop("selected", true);
+        aggiornaCons(row.tappa);
+        evidenziaRigaModificata(
+            $('#insert_' + row.tappa).closest('tr')
+        );
     });
     
   
   };
 
 
+
+function evidenziaRigaModificata($element) {
+  $element.addClass('riga-modificata');
+
+  if (!$element.find('.icona-modificata').length) {
+      $element.find('td:last').prepend(
+          '<i class="bi bi-pencil-fill icona-modificata me-1" title="Riga modificata, da salvare"></i>'
+      );
+  }
+}
+
+
+function aggiornaCons(tappa) {
+
+    //console.log('Sono nella funzione aggiornaCons');
+    var $causale = $('#insert_' + tappa);
+    var $punteggio = $('#punteggio_' + tappa);
+
+    var causale = $causale.val();
+    var punteggio = $punteggio.val();
+
+    var row = $table_tappe.bootstrapTable('getData').find(function(row) {
+        return String(row.tappa) === String(tappa);
+    });
+
+    //console.log('Per la tappa ' + tappa + ' ho causale ' + causale + ' e punteggio ' + punteggio);
+    // Tappa prevista ma ancora senza consuntivazione:
+    // nella visualizzazione considero COMPLETATO / 100%
+    if (row && row.check_previsto === '1' && !causale) {
+        causale = '100';
+        punteggio = '100';
+    }
+
+    var descrizione = $causale
+        .find('option[value="' + causale + '"]')
+        .text();
+
+    $('#causale_view_' + tappa).text(descrizione || '');
+
+    $('#punteggio_view_' + tappa).text(
+        punteggio ? punteggio + '%' : ''
+    );
+}
 
 function getRowSelections() {
     return $.map($table_tappe.bootstrapTable('getSelections'), 
@@ -469,23 +801,64 @@ function select_causale() {
       }
         $('#insert_'+row.tappa+' option[value='+row.id_causale+']').prop("selected", true);
         $('#punteggio_'+row.tappa+' option[value='+row.punteggio+']').prop("selected", true);
+    
+      // aggiorno la colonna Cons
+      aggiornaCons(row.tappa);
     })
+
+    
+
+
 };
 
+/*function select_causale() {
 
-function update_p() {
-  return $.map($table_tappe.bootstrapTable('getSelections'), 
-    function(row, index) {
-      var causale = $('select#insert_'+row.tappa+'').find(":selected").val();
-      console.log('Ho scelto manualmente la causale ' + causale);
-      if (causale==='100'){
-        $('#punteggio_'+row.tappa+' option:selected').prop("selected", false);
-        $('#punteggio_'+row.tappa+'').attr('disabled',true);
-      } else {
-         $('#punteggio_'+row.tappa+' option[value=0]').prop("selected", true);
-         $('#punteggio_'+row.tappa+'').attr('disabled',false);
-      }
-    })
+    console.log('Chiamo la funzione select_causale');
+
+    $table_tappe.bootstrapTable('getData').forEach(function(row) {
+
+        // Se esiste già una consuntivazione
+        if (row.id_causale) {
+
+            $('#insert_' + row.tappa).val(row.id_causale);
+            $('#punteggio_' + row.tappa).val(row.punteggio);
+
+        } else if (row.check_previsto === '1') {
+
+            // Tappa prevista NON ancora consuntivata:
+            // visualizzo COMPLETATO / 100
+            $('#insert_' + row.tappa).val('100');
+            $('#punteggio_' + row.tappa).val('100');
+        }
+
+        aggiornaCons(row.tappa);
+    });
+}*/
+
+
+function update_p(select) {
+
+    const tappa = select.id.replace('insert_', '');
+    const causale = $(select).val();
+
+    console.log('Tappa ' + tappa);
+    console.log('Causale scelta: ' + causale);
+
+    if (causale === '100') {
+
+        $('#punteggio_' + tappa + ' option:selected').prop('selected', false);
+        $('#punteggio_' + tappa).attr('disabled', true);
+
+    } else {
+
+        $('#punteggio_' + tappa + ' option[value=0]').prop('selected', true);
+        $('#punteggio_' + tappa).attr('disabled', false);
+    }
+
+
+
+     
+
 }
 
 
@@ -602,10 +975,13 @@ function causaleForm(value, row, index) {
   if ((row.check_previsto === '1' && (!row.id_causale)) || ( row.id_causale=== '100')) {
     return [
         //'<form action="" autocomplete="off" id="insert_'+row.tappa+'">',
-        '<select id="insert_'+row.tappa+'"  class="show-tick form-select" data-live-search="true" onclick="update_p()" name="causale" required="">',
-        '<option name="causale" value="100">COMPLETATO</option>',  
+        '<select id="insert_'+row.tappa+'"  class="show-tick form-select" data-live-search="true" onchange="update_p(this)"  name="causale" required="">',
+        '<option name="causale" value="100" selected>COMPLETATO</option>',  
         <?php 
-        $query="select id, descrizione from spazzamento.causali_testi ct  where descrizione not like 'TERMINATO SENZA DISSERVIZI' order by 2";
+        $query="select id, descrizione from spazzamento.causali_testi ct  
+        where descrizione not like 'TERMINATO SENZA DISSERVIZI' 
+        and id not in (98, 102, 100) /* tolgo anche la causale TAPPA AGGIUNTIVA c
+        che non è così chiara*/ order by 2";
         $result = pg_query($conn_hub, $query);
         while($r = pg_fetch_assoc($result)) {
         ?>
@@ -617,11 +993,13 @@ function causaleForm(value, row, index) {
     } else if (row.check_previsto === '0'){
       return [
       //'<form action="" autocomplete="off" id="insert_'+row.tappa+'">',
-        '<select id="insert_'+row.tappa+'"  class="show-tick form-select" data-live-search="true" onclick="update_p()"  disabled="" name="causale" id="causale" required="">',
+        '<select id="insert_'+row.tappa+'"  class="show-tick form-select" data-live-search="true" onchange="update_p(this)"   disabled="" name="causale" required="">',
         '<option name="causale" value="">Seleziona una causale</option>',  
         <?php 
         $query="select id, descrizione from spazzamento.causali_testi ct  
-        where descrizione = 'COMPLETATO'";
+        where descrizione not like 'TERMINATO SENZA DISSERVIZI' 
+        and id not in (98, 102) /* tolgo anche la causale TAPPA AGGIUNTIVA c
+        che non è così chiara*/ order by 2";
         $result = pg_query($conn_hub, $query);
         while($r = pg_fetch_assoc($result)) {
         ?>
@@ -633,11 +1011,13 @@ function causaleForm(value, row, index) {
     } else {
           return [
       //'<form action="" autocomplete="off" id="insert_'+row.tappa+'">',
-        '<select id="insert_'+row.tappa+'"  class="show-tick form-select" data-live-search="true" onclick="update_p()"  disabled="" name="causale" id="causale" required="">',
+        '<select id="insert_'+row.tappa+'"  class="show-tick form-select" data-live-search="true" onchange="update_p(this)"  disabled="" name="causale" required="">',
         '<option name="causale" value="">Seleziona una causale</option>',  
         <?php 
         $query="select id, descrizione from spazzamento.causali_testi ct  
-        where descrizione not like 'TERMINATO SENZA DISSERVIZI' order by 2";
+        where descrizione not like 'TERMINATO SENZA DISSERVIZI' 
+        and id not in (98, 102) /* tolgo anche la causale TAPPA AGGIUNTIVA c
+        che non è così chiara*/ order by 2";
         $result = pg_query($conn_hub, $query);
         while($r = pg_fetch_assoc($result)) {
         ?>
@@ -651,7 +1031,15 @@ function causaleForm(value, row, index) {
    
   };
 
+function causalePunteggioForm(value, row, index) {
 
+    return [
+        '<div class="text-center">',
+            '<div class="fw-bold" id="causale_view_' + row.tappa + '"></div>',
+            '<div class="text-muted" id="punteggio_view_' + row.tappa + '"></div>',
+        '</div>'
+    ].join('');
+}
 
 
 
