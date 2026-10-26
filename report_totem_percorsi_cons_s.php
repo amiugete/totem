@@ -30,6 +30,7 @@ the_page_title();
 require_once 'carica_env.php';
 require_once 'conn_ok.php';
 
+require_once 'report_totem_style.php';
 
 
 
@@ -63,52 +64,11 @@ require_once 'conn_ok.php';
     flex-direction: column;
 }
 
-/* PARTE FISSA */
-.intestazione-tabella1 {
-    flex-shrink: 0;
-}
-
-.contenitore-tabella {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-}
-
-.colonna-nascosta {
-  width: 0 !important;
-  min-width: 0 !important;
-  max-width: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  overflow: hidden !important;
-}
-
-td.colonna-nascosta,
-th.colonna-nascosta {
-    display: none !important;
-}
-
-.icona-modificata {
-    color: #ff0000;
-    display: inline-block;
-    animation: matita-pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes matita-pulse {
-    0%, 100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        transform: scale(1.35);
-        opacity: 0.55;
-    }
-}
 
 
 
 
+/*********************************************** */
 /* Compatto la tabella */
 #totem_percorsi_dettaglio_s {
     font-size: 0.90rem;
@@ -139,6 +99,21 @@ vertical-align: middle !important;
 #totem_percorsi_dettaglio_s .form-control {
 font-size: 0.70rem !important;
 }
+
+
+
+
+
+#PercorsoModal2 {
+    z-index: 1070;
+}
+
+#PercorsoModal2 ~ .modal-backdrop {
+    z-index: 1065;
+}
+
+
+
 </style>
 
 
@@ -244,7 +219,7 @@ while($r = pg_fetch_assoc($result)) {
 
         <script type="text/javascript">
         
-        $(document).ready(function () {                 
+          $(document).ready(function () {                 
                 $('#salva_cons').click(function (event) { 
                   console.log("Bottone salva cliccato");
                   event.preventDefault(); 
@@ -269,29 +244,56 @@ while($r = pg_fetch_assoc($result)) {
                     data: {'cons_tappe':selectedItems, 'datalav':datalav, 'consuntivatore':consuntivatore }, 
                     //processData: true, 
                     //contentType: false, 
-                    success: function (response) {                       
-                        //alert('Your form has been sent successfully.'); 
+                    success: function(response) {
+
                         console.log(response);
-                          $("#ConsOutput").html(response).fadeIn("slow");
-                          /*setTimeout(function(){// wait for 5 secs(2)
-                            location.reload(); // then reload the page.(3)
-                        }, 1000);*/
-                        //return false;
-                                  
-                    }, 
+
+                        $("#ConsOutput").html(response).fadeIn("slow");
+
+                        // aggiorno la tabella dopo il salvataggio
+                        $table_tappe.bootstrapTable('refresh', {
+                            url: "./tables/report_totem_percorsi_cons_s.php?id=<?php echo $id;?>&datalav=<?php echo $datalav;?>&id_uo=<?php echo $id_uo;?>"
+                        });
+
+
+                        // apro il secondo modal caricando il form
+                        $.ajax({
+                          type: "POST",
+                          url: "report_totem_percorsi_serv.php",
+                          data: {
+                              id: "<?php echo $id;?>",
+                              datalav: datalav,
+                              consuntivatore: consuntivatore,
+                              id_uo: <?php echo $id_uo;?>
+                          },
+                          dataType: "html",
+
+                          success: function(responseModal) {
+
+                              $('#PercorsoModal2').appendTo('body');
+
+                              $("#PercorsoModal2 .modal-body").html(responseModal);
+
+                              var modalEl2 = document.getElementById('PercorsoModal2');
+                              var modal2 = bootstrap.Modal.getOrCreateInstance(modalEl2);
+
+                              modal2.show();
+                          }, 
+                          error: function(xhr, status, error) {
+
+                              alert('Errore nel caricamento del form.');
+
+                              console.error(error);
+                          }
+                      });
+                    },
                     error: function (jqXHR, textStatus, errorThrown) {                        
-                        alert('Your form was not sent successfully.'); 
+                        alert('Problemi con il salvataggio della consuntivazione'); 
                         console.error(errorThrown); 
                     } 
                   });
-                  console.log('provo refresh pagina');
-                  $(function() {    // Faccio refresh della data-url
-                    $table_tappe.bootstrapTable('refresh', {
-                      url: "./tables/report_totem_percorsi_cons_s.php?id=<?php echo $id;?>&datalav=<?php echo $datalav;?>&id_uo=<?php echo $id_uo;?>"
-                    }); 
-                  });
                   return false;
-                  console.log('Fatto refresh pagina');
+
                 });
               });
 
@@ -620,6 +622,7 @@ $table_tappe.on('click', 'tbody tr', function (e) {
     console.log('row.causale = '+row.causale);
     console.log('row.punteggio = '+row.punteggio);
 
+
     const isUT = String(window.consuntivatore).startsWith('UT');
     const stessaPersona =
         String(window.consuntivatore) === String(row.codice);
@@ -632,6 +635,9 @@ $table_tappe.on('click', 'tbody tr', function (e) {
       $("#ConsOutput").html('<br><div class="alert alert-warning alert-animated" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> Tappa già consuntivata come completata da '+row.codice+'. Non posso cambiare la consuntivazione. <br>In caso di problemi segnalare al RUT/assistente/GRIM</div>').fadeIn("slow");
       $('#insert_' + row.tappa).prop('disabled', true);
       $('#punteggio_' + row.tappa).prop('disabled', true);
+      return;
+    }else if(!isUT && row.punteggio > punteggio && !stessaPersona) {
+      $("#ConsOutput").html('<br><div class="alert alert-warning alert-animated" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> Tappa già consuntivata con punteggio maggiore da '+row.codice+'. Non posso cambiare diminuire il punteggio. <br>In caso di problemi segnalare al RUT/assistente/GRIM</div>').fadeIn("slow");
       return;
     } else {
       $("#ConsOutput").html('').fadeIn("slow");

@@ -10,6 +10,33 @@ if (session_status() === PHP_SESSION_NONE) {
 <html lang="en">
 
 
+
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="roberto" >
+
+    <title>Gestione servizi</title>
+<?php 
+
+$check_modal=1;
+
+require_once('./req.php');
+
+the_page_title();
+
+
+require_once 'carica_env.php';
+require_once 'conn_ok.php';
+
+require_once 'report_totem_style.php';
+
+?> 
+
 <style>
 /* Stile checkbox tappe previste */
 .previsto input[type="checkbox"] {
@@ -46,37 +73,44 @@ if (session_status() === PHP_SESSION_NONE) {
     min-height: 0;
     overflow-y: auto;
 }
+
+
+
+/*********************************************** */
+/* Compatto la tabella */
+#totem_percorsi_dettaglio_r {
+    font-size: 0.90rem;
+}
+
+#totem_percorsi_dettaglio_r th,
+#totem_percorsi_dettaglio_r td {
+    padding: 0.2rem 0.3rem !important;
+}
+
+#totem_percorsi_dettaglio_r select {
+    font-size: 0.78rem;
+}
+
+/* Intestazioni centrate verticalmente */
+#totem_percorsi_dettaglio_r thead th {
+vertical-align: middle !important;
+}
+ 
+/* Filtro leggermente più piccolo */
+#totem_percorsi_dettaglio_r thead input.form-control {
+  font-size: 0.70rem !important;
+  padding: 0.2rem 0.2rem;
+  height: auto;
+}
+
+
+#totem_percorsi_dettaglio_r .form-control {
+font-size: 0.70rem !important;
+}
+
+
+
 </style>
-
-
-<head>
-
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="roberto" >
-
-    <title>Gestione servizi</title>
-<?php 
-
-$check_modal=1;
-
-require_once('./req.php');
-
-the_page_title();
-
-
-require_once 'carica_env.php';
-require_once 'conn_ok.php';
-
-
-
-
-
-
-?> 
-
 
 
 
@@ -248,6 +282,11 @@ function closeToast() {
 
         ?>
     
+        <script type="text/javascript">
+          // passo la variabile consuntivatore a javascript
+          //const consuntivatore = <?= json_encode($consuntivatore) ?>;
+          window.consuntivatore = <?= json_encode($consuntivatore) ?>;
+        </script>
 
         <script type="text/javascript">
         
@@ -282,25 +321,52 @@ function closeToast() {
                         //alert('Your form has been sent successfully.'); 
                         console.log(response);
                           $("#ConsOutput").html(response).fadeIn("slow");
-                          /*setTimeout(function(){// wait for 5 secs(2)
-                            location.reload(); // then reload the page.(3)
-                        }, 1000);*/
-                        //return false;
+                        
+                          
+                        // aggiorno la tabella dopo il salvataggio
+                        $table_tappe.bootstrapTable('refresh', {
+                            url: "./tables/report_totem_percorsi_cons_r.php?id=<?php echo $id;?>&datalav=<?php echo $datalav;?>&id_uo=<?php echo $id_uo;?>"
+                        });
+
+
+                        // apro il secondo modal caricando il form
+                        $.ajax({
+                          type: "POST",
+                          url: "report_totem_percorsi_serv.php",
+                          data: {
+                              id: "<?php echo $id;?>",
+                              datalav: datalav,
+                              consuntivatore: consuntivatore,
+                              id_uo: <?php echo $id_uo;?>
+                          },
+                          dataType: "html",  
+                          success: function(responseModal) {
+
+                              $('#PercorsoModal2').appendTo('body');
+
+                              $("#PercorsoModal2 .modal-body").html(responseModal);
+
+                              var modalEl2 = document.getElementById('PercorsoModal2');
+                              var modal2 = bootstrap.Modal.getOrCreateInstance(modalEl2);
+
+                              modal2.show();
+                          }, 
+                          error: function(xhr, status, error) {
+
+                              alert('Errore nel caricamento del form.');
+
+                              console.error(error);
+                          }
+                      });
+
                                   
                     }, 
                     error: function (jqXHR, textStatus, errorThrown) {                        
-                        alert('Your form was not sent successfully.'); 
+                        alert('Problemi con il salvataggio della consuntivazione'); 
                         console.error(errorThrown); 
                     } 
                   });
-                  console.log('provo refresh pagina');
-                  $(function() {    // Faccio refresh della data-url
-                    $table_tappe.bootstrapTable('refresh', {
-                      url: "./tables/report_totem_percorsi_cons_r.php?id=<?php echo $id;?>&datalav=<?php echo $datalav;?>&id_uo=<?php echo $id_uo;?>"
-                    }); 
-                  });
                   return false;
-                  console.log('Fatto refresh pagina');
                 });
               });
 
@@ -381,7 +447,7 @@ order by 2";
       </div>
       
       <div class="col-2 text-start">
-      <button onclick="updateAll()" class="btn btn-warning btn-sm">
+      <button id="btnApplica" onclick="updateAll()" class="btn btn-warning btn-sm">
       <i class="fa-solid fa-list-check"></i> Applica a tappe previste
       <br><small>(opzionalmente via)</small>
       </button>
@@ -420,7 +486,10 @@ order by 2";
       <div id="ConsOutput" class="text-center">
 
       </div>
-      <hr>  
+      
+      <div id="ConsOutputSave" class="text-center">
+      </div>
+      <hr>
       
       </div>
       <!-- fine parte fissa-->
@@ -467,7 +536,8 @@ order by 2";
         <th data-field="id_via" data-sortable="false" data-visible="false" >Cod via</th>
         <th data-field="riferimento" data-sortable="true" data-visible="true" data-filter-control="input">Tratto</th>
         <th data-field="check_previsto" data-sortable="true" data-formatter="nameFormatterPrevisto" data-visible="true">Previsto</th>
-        <th data-field="id_causale" data-sortable="true" data-visible="true" data-formatter="causaleForm">Causale</th>
+        <th data-field="id_causale" data-sortable="true" data-visible="true" data-formatter="causaleForm"
+        data-class="colonna-nascosta">Causale</th>
 
         <th data-field="" data-sortable="true" data-visible="true" data-formatter="consStato">Stato<br>consuntivazione</th>
         <th data-field="fatto" data-sortable="true" data-visible="false" data-formatter="consStato">Fatti</th>
@@ -491,6 +561,34 @@ var $table_tappe = $('#totem_percorsi_dettaglio_r');
 $(function() {
   $table_tappe.bootstrapTable({ });
 });
+
+
+$table_tappe.on('load-success.bs.table', function () {
+  controllaApplica();
+});
+
+function controllaApplica() {
+    //console.log('Sta girando la funzione controllaApplica');
+    var disabilita = false;
+
+    $table_tappe.bootstrapTable('getData').forEach(function(row) {
+
+        if (
+            row.codice !== null &&
+            row.codice !== '' &&
+            String(row.codice) !== String(consuntivatore) &&
+            !String(consuntivatore).startsWith('UT')
+        ) {
+            disabilita = true;
+        }
+
+    });
+
+    $('#btnApplica').prop('disabled', disabilita);
+    if (disabilita === true) {
+      $("#noteApplica").html('<small><i class="fa-solid fa-person-circle-exclamation"></i>Ci sono tappe consuntivate da altro operatore. Il tasto applica non può essere utilizzato</small>').fadeIn("slow");   
+    } 
+}
 
 
 
@@ -540,7 +638,7 @@ $( "#causale_tutto" ).on( "change", function() {
 } );
 
 function updateAll() {
-    console.log('Sono nella funzione updateAll');
+    //console.log('Sono nella funzione updateAll');
 
     const causale_all = $('#causale_tutto').val();
 
@@ -629,7 +727,12 @@ function updateAll() {
     closeToast();
     showToast(messaggio_ok, "success", false);
 
-    $("#ConsOutput").html('<div class="alert alert-warning alert-animated" role="alert">'+messaggio_ok+'</div>').fadeIn("slow");
+    var messaggio= '<br><div class="alert alert-warning alert-animated" role="alert"><i class="fa-solid fa-pencil"></i> Modifiche in corso. <b>Ricorda di salvare per rendere effettiva le modifiche.</b></div>';
+    $("#ConsOutputSave").html(messaggio).fadeIn("slow");
+
+
+    /*$("#ConsOutput").html('<div class="alert alert-warning alert-animated" role="alert">'+messaggio_ok+'</div>').fadeIn("slow");*/
+
 };
 
 
@@ -810,12 +913,64 @@ function tastiBidoni(value, row, index) {
 
 // intercetta il click sul contenitore
 function updateCont(value, num_elementi) {
-    console.log("Click su contenitore", value);
+    console.log("Click su singolo contenitore", value);
+
+
+    const [tappa, bidone] = value.split("_");
+
+    const row = $table_tappe.bootstrapTable('getData')
+            .find(r => String(r.tappa) === String(tappa));
+    
+    // Leggo la causale selezionata in alto
+    const causale = $('#causale_tutto').val();
+    
+    //console.log('Causale in alto: '+causale);
+    //console.log('row = '+row);
+    //console.log('row.id_causale = '+row.id_causale);
+    //console.log('row.codice = '+row.codice);
+    const isUT = String(window.consuntivatore).startsWith('UT');
+    const stessaPersona =
+        String(window.consuntivatore) === String(row.codice);
+
+
+    const giaCompletata =
+        row.codice !== null && row.codice !== '' 
+        && (row.id_causale === '100' || row.id_causale === '110');
+
+    
+    if (!isUT && giaCompletata && !stessaPersona) {
+      $("#ConsOutput").html('<br><div class="alert alert-warning alert-animated" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> Tappa già consuntivata come completata da '+row.codice+'. Non posso cambiare la consuntivazione. <br>In caso di problemi segnalare al RUT/assistente/GRIM</div>').fadeIn("slow");
+      $('#insert_' + row.tappa).prop('disabled', true);
+      return;
+    } else {
+      $("#ConsOutput").html('').fadeIn("slow");
+    }
+
+
 
     let messaggio_ok= "Dato modificato correttamente. Quando hai terminato ricordati di cliccare su salva";
 
-    const [tappa, bidone] = value.split("_");
-    const causale = $('#insert_' + tappa).val();
+    
+
+    // Leggo la causale selezionata in alto
+
+
+
+    //console.log('Causale in alto: '+causale);
+    
+    
+    if (!causale){
+      msg='Seleziona una causale'
+      $("#ConsOutput").html(
+            '<br><div class="alert alert-warning alert-animated" role="alert">' +
+            msg +
+            '</div>'
+        ).fadeIn("slow");
+        return;
+    }
+
+    // Aggiorno la causale della singola tappa, anche se la select è nascosta
+    $('#insert_' + tappa).val(causale);
     const icon = $("#" + value);
     const isRed = icon.hasClass("bin-red");
     const isGreen = icon.hasClass("bin-green");
@@ -874,9 +1029,26 @@ function updateCont(value, num_elementi) {
     
     closeToast();
     showToast(messaggio_ok, "success", false);
+
     $("#ConsOutput").fadeOut("fast", function() {
         $(this).empty();
     });
+
+    
+
+    if (!row) {
+        console.error('Riga non trovata per la tappa:', tappa);
+        return;
+    }
+    evidenziaRigaModificata(
+            $('#insert_' + row.tappa).closest('tr')
+    );
+
+    var messaggio= '<br><div class="alert alert-warning alert-animated" role="alert"><i class="fa-solid fa-pencil"></i> Modifiche in corso. <b>Ricorda di salvare per rendere effettiva le modifiche.</b></div>';
+    
+    $("#ConsOutputSave").html(messaggio).fadeIn("slow");
+
+
     return;
 }
 
@@ -885,7 +1057,52 @@ function updateCont(value, num_elementi) {
 
 function updateTappa(tappa, caus) {
     console.log("Click su update tappa:", tappa);
-    const causale = $('#insert_'+tappa).val();
+
+    const row = $table_tappe.bootstrapTable('getData')
+            .find(r => String(r.tappa) === String(tappa));
+    
+    // Leggo la causale selezionata in alto
+    const causale = $('#causale_tutto').val();
+    
+    //console.log('Causale in alto: '+causale);
+    //console.log('row = '+row);
+    //console.log('row.id_causale = '+row.id_causale);
+    //console.log('row.codice = '+row.codice);
+    const isUT = String(window.consuntivatore).startsWith('UT');
+    const stessaPersona =
+        String(window.consuntivatore) === String(row.codice);
+
+
+    const giaCompletata =
+        row.codice !== null && row.codice !== '' 
+        && (row.id_causale === '100' || row.id_causale === '110');
+
+    
+    if (!isUT && giaCompletata && !stessaPersona) {
+      $("#ConsOutput").html('<br><div class="alert alert-warning alert-animated" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> Tappa già consuntivata come completata da '+row.codice+'. Non posso cambiare la consuntivazione. <br>In caso di problemi segnalare al RUT/assistente/GRIM</div>').fadeIn("slow");
+      $('#insert_' + row.tappa).prop('disabled', true);
+      return;
+    } else {
+      $("#ConsOutput").html('').fadeIn("slow");
+    }
+
+    
+    if (!causale){
+      msg='Seleziona una causale';
+      $("#ConsOutput").html(
+            '<br><div class="alert alert-warning alert-animated" role="alert">' +
+            msg +
+            '</div>'
+        ).fadeIn("slow");
+        return;
+    }
+
+
+
+
+
+    // Aggiorno la causale della singola tappa, anche se la select è nascosta
+    $('#insert_' + tappa).val(causale);
     //console.log('Causale globale passata:', causaleAll);
     console.log('Causale singola selezionata:', causale);
     
@@ -950,6 +1167,12 @@ function updateTappa(tappa, caus) {
         $("#ConsOutput").fadeOut("fast", function() {
             $(this).empty();
         });
+        evidenziaRigaModificata(
+            $('#insert_' + row.tappa).closest('tr')
+        );
+
+        var messaggio= '<br><div class="alert alert-warning alert-animated" role="alert"><i class="fa-solid fa-pencil"></i> Modifiche in corso. <b>Ricorda di salvare per rendere effettiva le modifiche.</b></div>';
+        $("#ConsOutputSave").html(messaggio).fadeIn("slow");
         return;
     }
 
@@ -987,6 +1210,24 @@ function updateTappa(tappa, caus) {
         $("#ConsOutput").fadeOut("fast", function() {
             $(this).empty();
         });
+
+
+
+
+        
+
+        if (!row) {
+            console.error('Riga non trovata per la tappa:', tappa);
+            return;
+        }
+
+
+        evidenziaRigaModificata(
+            $('#insert_' + row.tappa).closest('tr')
+        );
+
+        var messaggio= '<br><div class="alert alert-warning alert-animated" role="alert"><i class="fa-solid fa-pencil"></i> Modifiche in corso. <b>Ricorda di salvare per rendere effettiva le modifiche.</b></div>';
+        $("#ConsOutputSave").html(messaggio).fadeIn("slow");
         return;
     }
 }
@@ -1037,6 +1278,17 @@ function updateTappa(tappa, caus) {
    
   };*/
 
+
+// funzione per aggiungere un'icona all'ultima riga
+function evidenziaRigaModificata($element) {
+  $element.addClass('riga-modificata');
+
+  if (!$element.find('.icona-modificata').length) {
+      $element.find('td:last').prepend(
+          '<i class="bi bi-pencil-fill icona-modificata me-1" title="Riga modificata, da salvare"></i>'
+      );
+  }
+}
 
 
 
