@@ -10,7 +10,7 @@ function redirect($url)
 // =========================
 // CONFIG
 // =========================
-$lifetime = 86400; // secondi per sessione logica
+$lifetime = 8 * 60 * 60 ; // secondi per sessione logica (8 h)
 
 $timeout  = 6 * 60 * 60; // 6 ore sessione logica
 
@@ -101,7 +101,7 @@ if (isset($_GET['jwt'])) {
 // =========================
 else if (isset($_SESSION['username'])) {
 
-    setcookie("un", $_SESSION['username'], time() + (86400 * 7), "/");
+    setcookie("un", $_SESSION['username'], time() + (8 * 60 * 60), "/");
 
     if (!isset($_SESSION['expire'])) {
         $_SESSION['expire'] = time() + $timeout;
