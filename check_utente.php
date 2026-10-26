@@ -81,7 +81,7 @@ if (isset($_GET['jwt'])) {
             if ($key == 'name') {
                 $_SESSION['username'] = $value;
 
-                setcookie("un", $value, time() + (86400 * 7), "/");
+                setcookie("un", $value, time() + (8 * 60 * 60), "/");
 
                 $_SESSION['start'] = time();
                 $_SESSION['expire'] = $_SESSION['start'] + $timeout;
@@ -126,7 +126,7 @@ else if (isset($_COOKIE['un'])) {
     $_SESSION['start'] = time();
     $_SESSION['expire'] = $_SESSION['start'] + $timeout;
 
-    setcookie("un", $_SESSION['username'], time() + (86400 * 7), "/");
+    setcookie("un", $_SESSION['username'], time() + (8 * 60 * 60), "/");
 
     if (time() > $_SESSION['expire'] && basename($_SERVER['PHP_SELF']) != 'login.php') {
 
