@@ -49,6 +49,7 @@ if(!$conn_hub) {
             freq_settimane
         ) AS check_previsto,
         e.id_causale,
+        cc.descrizione as descr_causale,
         e.codice,
         e.datainsert,
         e.fatto
@@ -75,6 +76,8 @@ if(!$conn_hub) {
         end desc,
         datainsert DESC
     ) e ON e.tappa = cpra.id_tappa
+    left join (select id::int, descrizione from raccolta.causali_testi
+    where id::int <>100) cc on cc.id = e.id_causale
     WHERE TO_DATE($1, 'DD/MM/YYYY') BETWEEN data_inizio AND data_fine
       AND id_percorso = $2";
       

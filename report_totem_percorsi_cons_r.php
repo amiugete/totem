@@ -823,8 +823,10 @@ function update_p() {
   function  consStato(value, row, index) {
   if ((!row.id_causale) ) {
     return "";
+   } else if ((row.descr_causale) ){
+    return row.descr_causale + "<br>"+row.codice+" il "+ moment(row.datainsert).format('DD/MM/YYYY HH:mm') +"";
    } else {
-    return "Consuntivato da "+row.codice+" il "+ moment(row.datainsert).format('DD/MM/YYYY HH:mm') +"";
+    return 'Consuntivato da ' + row.codice+" il "+ moment(row.datainsert).format('DD/MM/YYYY HH:mm') +"";
    }
   };
 
@@ -923,7 +925,7 @@ function updateCont(value, num_elementi) {
     
     // Leggo la causale selezionata in alto
     const causale = $('#causale_tutto').val();
-    
+    const descr_c = $('#causale_tutto option:selected').text(); // testo
     //console.log('Causale in alto: '+causale);
     //console.log('row = '+row);
     //console.log('row.id_causale = '+row.id_causale);
@@ -1041,7 +1043,8 @@ function updateCont(value, num_elementi) {
         return;
     }
     evidenziaRigaModificata(
-            $('#insert_' + row.tappa).closest('tr')
+            $('#insert_' + row.tappa).closest('tr'),
+            descr_c
     );
 
     var messaggio= '<br><div class="alert alert-warning alert-animated" role="alert"><i class="fa-solid fa-pencil"></i> Modifiche in corso. <b>Ricorda di salvare per rendere effettiva le modifiche.</b></div>';
@@ -1063,7 +1066,7 @@ function updateTappa(tappa, caus) {
     
     // Leggo la causale selezionata in alto
     const causale = $('#causale_tutto').val();
-    
+    const descr_c = $('#causale_tutto option:selected').text(); // testo
     //console.log('Causale in alto: '+causale);
     //console.log('row = '+row);
     //console.log('row.id_causale = '+row.id_causale);
@@ -1168,7 +1171,7 @@ function updateTappa(tappa, caus) {
             $(this).empty();
         });
         evidenziaRigaModificata(
-            $('#insert_' + row.tappa).closest('tr')
+            $('#insert_' + row.tappa).closest('tr'), descr_c
         );
 
         var messaggio= '<br><div class="alert alert-warning alert-animated" role="alert"><i class="fa-solid fa-pencil"></i> Modifiche in corso. <b>Ricorda di salvare per rendere effettiva le modifiche.</b></div>';
@@ -1223,7 +1226,7 @@ function updateTappa(tappa, caus) {
 
 
         evidenziaRigaModificata(
-            $('#insert_' + row.tappa).closest('tr')
+            $('#insert_' + row.tappa).closest('tr'), descr_c
         );
 
         var messaggio= '<br><div class="alert alert-warning alert-animated" role="alert"><i class="fa-solid fa-pencil"></i> Modifiche in corso. <b>Ricorda di salvare per rendere effettiva le modifiche.</b></div>';
@@ -1280,12 +1283,15 @@ function updateTappa(tappa, caus) {
 
 
 // funzione per aggiungere un'icona all'ultima riga
-function evidenziaRigaModificata($element) {
+function evidenziaRigaModificata($element, $causale) {
+  console.log('element: '+$element);
+  console.log('descr_causale: '+ $causale);
   $element.addClass('riga-modificata');
 
   if (!$element.find('.icona-modificata').length) {
       $element.find('td:last').prepend(
-          '<i class="bi bi-pencil-fill icona-modificata me-1" title="Riga modificata, da salvare"></i>'
+          '<i class="bi bi-pencil-fill icona-modificata me-1" title="Riga modificata, da salvare"></i>' +
+            $causale + ' '
       );
   }
 }
