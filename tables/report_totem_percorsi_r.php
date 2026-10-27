@@ -76,7 +76,12 @@ from (
 		check_previsto
 	) as check_previsto,
 	string_agg(distinct causale, ',') as causali, 
-	string_agg(distinct descr_causale, ',') as causali_text, datalav,
+	case 
+		when string_agg(distinct causale, ',') = '100' then 'COMPLETATO'
+		else string_agg(distinct descr_causale, ',') FILTER (WHERE descr_causale <> 'COMPLETATO')	
+	end
+	 as causali_text, 
+	datalav,
 	no_autista
 	from (
 		select at2.descr_orario,
