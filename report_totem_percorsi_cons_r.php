@@ -321,7 +321,9 @@ function closeToast() {
                         //alert('Your form has been sent successfully.'); 
                         console.log(response);
                           $("#ConsOutput").html(response).fadeIn("slow");
-                        
+                        $("#ConsOutputSave").fadeOut("fast", function() {
+                           $(this).empty();
+                        });
                           
                         // aggiorno la tabella dopo il salvataggio
                         $table_tappe.bootstrapTable('refresh', {
@@ -394,7 +396,8 @@ function closeToast() {
 			<option name="causale_tutto" value="<?php echo trim($r["id"]);?>"><?php echo $r["descrizione"] ;?></option>
 			<?php } ?>
       </select>
-      <small>Da applicare su tutto il percorso o sulle vie selezionate</small>
+      <small>Da applicare su tutto il percorso o sulla via selezionata, 
+      </small>
       </div>
 
 
@@ -494,7 +497,7 @@ order by 2";
       </div>
       <!-- fine parte fissa-->
       <div class="contenitore-tabella">
-
+      <small>Per modificare una causale, selezionarla in alto e cliccare sul numero (intera piazzola) o sul contenitore (singolo elemento)</small>
         <div class="table-responsive-sm">
 
         <!--div id="toolbar">
@@ -997,7 +1000,20 @@ function updateCont(value, num_elementi) {
           return;
       }
       // verde → rosso
-        icon.removeClass("bin-green").addClass("bin-red");
+      console.log('Da verde a rosso')
+      icon.removeClass("bin-green").addClass("bin-red");
+
+      if (numBidoniRossi >= 1){
+        let messaggio='<i class="bi bi-exclamation-triangle-fill"></i> ' +
+              'Impostata causale <b>'+descr_c+'</b>. Tutti i contenitori rossi di questa tappa assumeranno questa causale';
+        console.log(messaggio);
+        $("#ConsOutput").html(
+              '<br><div class="alert alert-warning alert-animated" role="alert">' +
+               messaggio+
+              '</div>'
+        ).fadeIn("slow");
+      }
+
     // ─────────────────────────────────────────────
     // 2️⃣ BIDONE ROSSO → può tornare verde SOLO se causale == 100
     // ─────────────────────────────────────────────
@@ -1015,8 +1031,18 @@ function updateCont(value, num_elementi) {
           return;
         }
 
+        
         // rosso → verde
         icon.removeClass("bin-red").addClass("bin-green");
+        let messaggio='<i class="bi bi-exclamation-triangle-fill"></i> ' +
+              'Hai cliccato su un singolo contenitore precedentemente dichiarato non fatto. <br>Contenitore ripristinato come fatto';
+        console.log(messaggio);
+        $("#ConsOutput").html(
+              '<br><div class="alert alert-warning alert-animated" role="alert">' +
+               messaggio+
+              '</div>'
+        ).fadeIn("slow");
+        return;
     }
 
 
@@ -1032,9 +1058,9 @@ function updateCont(value, num_elementi) {
     closeToast();
     showToast(messaggio_ok, "success", false);
 
-    $("#ConsOutput").fadeOut("fast", function() {
+    /*$("#ConsOutput").fadeOut("fast", function() {
         $(this).empty();
-    });
+    });*/
 
     
 
@@ -1154,7 +1180,8 @@ function updateTappa(tappa, caus) {
                 '</div>'
             ).fadeIn("slow");
             showToast(messaggio, "warning", true);
-            return;
+            //return; 
+            // procedo comunque per cambiare causale
         }
 
         // Tutti diventano rossi
@@ -1283,19 +1310,31 @@ function updateTappa(tappa, caus) {
 
 
 // funzione per aggiungere un'icona all'ultima riga
-function evidenziaRigaModificata($element, $causale) {
-  console.log('element: '+$element);
-  console.log('descr_causale: '+ $causale);
+/*function evidenziaRigaModificata($element, $causale) {
+  //console.log('element: '+$element);
+  //console.log('descr_causale: '+ $causale);
   $element.addClass('riga-modificata');
 
   if (!$element.find('.icona-modificata').length) {
       $element.find('td:last').prepend(
-          '<i class="bi bi-pencil-fill icona-modificata me-1" title="Riga modificata, da salvare"></i>' +
-            $causale + ' '
+          '<i class="bi bi-pencil-fill icona-modificata me-1" title="Riga modificata, da salvare"></i><font color="red">' +
+            $causale + ' </font><br>'
       );
   }
-}
+}*/
+function evidenziaRigaModificata($element, causale) {
 
+    const $ultimaCella = $element.find('td:last');
+
+    $ultimaCella.find('.riga-causale').remove();
+
+    $ultimaCella.prepend(
+        '<span class="riga-causale">' +
+        '<i class="bi bi-pencil-fill icona-modificata me-1"></i>' +
+        '<font color="red">' + causale + '</font><br>' +
+        '</span>'
+    );
+}
 
 
 function causaleForm(value, row, index) {
