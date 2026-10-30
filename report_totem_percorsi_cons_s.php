@@ -342,7 +342,7 @@ while($r = pg_fetch_assoc($result)) {
       </div>
       <div class="col-3 text-start">
       <button id="btnApplica" onclick="updateAll()" class="btn btn-warning">
-      <i class="fa-solid fa-list-check"></i> Applica
+      <i class="fa-solid fa-list-check"></i> Applica ai selezionati
       </button>
       </div>
       <div class="col-3 text-end">
@@ -412,7 +412,7 @@ while($r = pg_fetch_assoc($result)) {
         <th data-field="state" data-checkbox="true" data-formatter="stateFormatter"></th>  
         <th data-field="tappa" data-sortable="true" data-visible="false" data-filter-control="input">Tappa</th>
         <th data-field="tratto" data-sortable="true" data-visible="true" data-filter-control="input">Tratto</th>
-        <th data-field="check_previsto" data-sortable="true" data-visible="false">Previsto</th>
+        <th data-field="check_previsto" data-sortable="true" data-visible="true" data-formatter="nameFormatterPrevisto">Previsto</th>
         <!--th data-field="check_prev_cons" data-sortable="true" data-visible="false">Previsto</th-->
         <th data-field="causale" data-sortable="true" data-visible="true" data-formatter="causaleForm" data-class="colonna-nascosta">Causale</th>
         <th data-field="punteggio" data-sortable="true" data-visible="true" data-formatter="punteggioForm" data-class="colonna-nascosta">Punteggio</th>
@@ -743,8 +743,38 @@ function evidenziaRigaModificata($element) {
       $element.find('td:last').prepend(
           '<i class="bi bi-pencil-fill icona-modificata me-1" title="Riga modificata, da salvare"></i>'
       );
+      
   }
+
+  indice = $element.data('index');
+  $('#totem_percorsi_dettaglio_s').bootstrapTable('check', indice);
+
+  const causale =  $('#causale_tutto').val();
+
+  let riga = $('#totem_percorsi_dettaglio_s').bootstrapTable('getData')[indice];
+
+  let stile = rowStyle(riga, indice);
+
+    // Applica le classi
+    if (stile.classes) {
+        $element.addClass(stile.classes);
+    }
+
+    // Applica gli stili CSS
+    if (stile.css) {
+        $element.css(stile.css);
+    }
+
 }
+
+
+function nameFormatterPrevisto(value, row, index) {
+  if (row.check_previsto == '1' || row.check_previsto === 1 || row.check_previsto === true){
+    return '<span style="font-size: 1em; color: green;"> <i title="'+row.check_previsto+'" class="fa-regular fa-calendar-check"></i></span>';
+  } else {
+    return '<span style="font-size: 1em; color: red;"> <i title="'+row.check_previsto+'" class="fa-regular fa-calendar-xmark"></i></span>';
+  }
+};
 
 
 function aggiornaCons(tappa) {
@@ -904,8 +934,10 @@ function rowStyle(row, index) {
       }
     }
   }*/
+  
+  const causale =  $('#causale_tutto').val();
 
-
+  console.log('sono in rowStyle e questa è la causale '+causale);
   // previsto e fatto o da consuntivare
   if (row.check_previsto === '1' && (row.id_causale === '100' || (!row.id_causale))) {
     return {
