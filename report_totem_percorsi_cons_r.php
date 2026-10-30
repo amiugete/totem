@@ -844,6 +844,8 @@ function numBidoni(value, row, index) {
   if ((row.check_previsto === '1' && (!row.id_causale)) || (row.id_causale === '100')) {
     // Crea un pulsante per ogni contenitore
     html2= `<input type="number" id="update_${row.tappa}" style="cursor:pointer;width:40px;text-align:center;" readonly value=${num_elementi} onclick="updateTappa('${row.tappa}', '${row.id_causale}')">`
+  } else if (row.check_previsto === '0' && (!row.id_causale)) {
+    html2= `<input  type="number" id="update_${row.tappa}" style="cursor:pointer;width:40px;text-align:center;" readonly value=0 onclick="updateTappa('${row.tappa}', '${row.id_causale}')">`
   } else {
     html2= `<input  type="number" id="update_${row.tappa}" style="cursor:pointer;width:40px;text-align:center;" readonly value=${fatto} onclick="updateTappa('${row.tappa}', '${row.id_causale}')">`
   }
@@ -861,7 +863,7 @@ function tastiBidoni(value, row, index) {
   let num_elementi = parseInt(row.num_elementi) || 0;
   let num_elementi_fatti = parseInt(row.fatto) || 0;
   let id_causale = row.id_causale;
-
+  let previsto = row.check_previsto;
   /*console.log('num_elementi =', num_elementi);
   console.log('num_elementi fatti =', num_elementi_fatti);
   console.log('id_causale =', row.id_causale);*/
@@ -891,17 +893,29 @@ function tastiBidoni(value, row, index) {
 
   // se tutti_fatti is true allora fatti = num_elementi altrimenti num_elementi_fatti
   const fatti = tutti_fatti ? num_elementi : num_elementi_fatti;
+  
   for (let i = 1; i <= num_elementi; i++) {
-    const colore = (i <= fatti) ? 'bin-green' : 'bin-red';
 
-    html += `
-      <i
-        id="${row.tappa}_${i}"
-        class="fa-solid fa-trash-can bin-icon ${colore}"
-        onclick="updateCont('${row.tappa}_${i}')">
-      </i>
-    `;
+  let colore;
+
+  if (
+      previsto == 0 &&
+      (id_causale === null || id_causale != 100)
+     ) {
+      colore = 'bin-red';
+  } else {
+      colore = (i <= fatti) ? 'bin-green' : 'bin-red';
   }
+
+  html += `
+    <i
+      id="${row.tappa}_${i}"
+      class="fa-solid fa-trash-can bin-icon ${colore}"
+      onclick="updateCont('${row.tappa}_${i}')">
+    </i>
+  `;
+  }
+  
 
   
   // Ritorna i pulsanti come HTML concatenato
@@ -1042,7 +1056,7 @@ function updateCont(value, num_elementi) {
                messaggio+
               '</div>'
         ).fadeIn("slow");
-        return;
+        //return;
     }
 
 
