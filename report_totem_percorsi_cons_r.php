@@ -267,7 +267,8 @@ function closeToast() {
 
 
 <div id="intestazione-tabella1">
-            
+  <div class="d-flex justify-content-between align-items-center">
+    <div>          
         <h4>Cod: <?php echo $id;?> - Desc: <?php echo $desc_percorso;?></h4> 
         <small>Data: <?php echo $datalav;?></small>
         <?php 
@@ -379,8 +380,11 @@ function closeToast() {
 
 
       </script>
-
-
+        </div>
+        <div>
+        
+        </div>
+      </div>
       <hr>
       <?php if (intval($edit) ==  1){ ?> 
       <div id="editing" class="row row-cols g-3">
@@ -396,8 +400,8 @@ function closeToast() {
 			<option name="causale_tutto" value="<?php echo trim($r["id"]);?>"><?php echo $r["descrizione"] ;?></option>
 			<?php } ?>
       </select>
-      <small>Da applicare su tutto il percorso o sulla via selezionata, 
-      </small>
+      <!--small>Da applicare su tutto il percorso o sulla via selezionata, 
+      </!--small-->
       </div>
 
 
@@ -405,7 +409,7 @@ function closeToast() {
       
       <div class="col-3 text-start">
       <select id="via_tutto"  class="show-tick form-select" data-live-search="true" name="causale_tutto" required="">
-      <option name="via_tutto" value="">Via..</option>
+      <option name="via_tutto" value="">Seleziona una via</option>
       <?php 
       $query2="select distinct cpra.id_via, cpra.nome_via 
 FROM raccolta.cons_percorsi_raccolta_amiu cpra
@@ -436,7 +440,7 @@ order by 2";
 			<option name="via_tutto" value="<?php echo trim($r2["id_via"]);?>"><?php echo $r2["nome_via"] ;?></option>
 			<?php } ?>
       </select>
-      <small>Seleziona una via</small>
+      <!--small>Seleziona una via</!--small-->
       </div>
   
       
@@ -451,8 +455,7 @@ order by 2";
       
       <div class="col-2 text-start">
       <button id="btnApplica" onclick="updateAll()" class="btn btn-warning btn-sm">
-      <i class="fa-solid fa-list-check"></i> Applica a tappe previste
-      <br><small>(opzionalmente via)</small>
+      <i class="fa-solid fa-list-check"></i> Applica
       </button>
       </div>
 
@@ -498,7 +501,13 @@ order by 2";
       <!-- fine parte fissa-->
       <div class="contenitore-tabella">
       <small>Per modificare una causale, selezionarla in alto e cliccare sul numero (intera piazzola) o sul contenitore (singolo elemento)</small>
-        <div class="table-responsive-sm">
+      <button type="button" class="btn btn-sm" data-bs-container="body" 
+          data-bs-toggle="popover" 
+          data-bs-custom-class="popover-xl"
+          data-bs-placement="bottom">
+          <i class="fa-regular fa-circle-question"></i>
+        </button>
+      <div class="table-responsive-sm">
 
         <!--div id="toolbar">
         <button id="showSelectedRows" class="btn btn-primary" type="button">Crea ordine di lavoro</button>
@@ -643,9 +652,9 @@ $( "#causale_tutto" ).on( "change", function() {
 function updateAll() {
     //console.log('Sono nella funzione updateAll');
 
-    const causale_all = $('#causale_tutto').val();
+    let causale_all = $('#causale_tutto').val();
 
-    const via_all = $('#via_tutto').val();
+    let via_all = $('#via_tutto').val();
     
 
     // Verifico se applicare anche alle tappe non previste
@@ -657,7 +666,7 @@ function updateAll() {
       console.log('Via da applicare: ' + via_all);
     }
     
-    console.log('Non previste? ' + np);
+    console.log('Non previste ' + np);
     
     // --- 1️⃣ Controllo causale ---
     if (!causale_all) {
@@ -685,7 +694,8 @@ function updateAll() {
     allRows.forEach(row => {
 
         // Considero solo le righe previste
-        if ((row.check_previsto !== '1') && (np===0)) {
+        
+        if ((row.check_previsto !== '1') && (np===1)) {
           console.log('' + row.tappa + ' perchè non prevista devo ripulirla');
 
           //$('#insert_' + row.tappa).val('82');  
@@ -696,6 +706,10 @@ function updateAll() {
           return;
         } 
         
+        if ((row.check_previsto !== '1') && (np===0)) {
+          return;
+        } 
+
         if ((!via_all) || (via_all && row.id_via === via_all)) {
           console.log('Aggiorno la tappa ' + row.tappa + ' della via ' + row.id_via);
         
@@ -1428,6 +1442,44 @@ function nameFormatterPrevisto(value, row, index) {
     return '<span style="font-size: 1em; color: red;"> <i title="'+row.check_previsto+'" class="fa-regular fa-calendar-xmark"></i></span>';
   }
 };
+
+
+
+var popoverContent = `<p>
+              
+              
+          
+          <h4>- Percorso effettuato regolarmente</h4><br>
+              all'apertura il percorso risulta tutto "COMPLETATO" quindi procedere direttamente con il salvataggio (premere "SALVA").<br><br>
+              
+              <b>- Percorso effettuato con problematiche su singole tappe</b><br>
+                1) Selezionare la problematica relativa<br>
+                2) Cliccare sul numero (per applicare a tutta la tappa) o sui singoli elementi (Icona bidoni) direttamente sulla tappa interessata secondo il numero di elementi interessati.
+                L'elemento selezionato diventerà di colore rosso e verrà scalato automaticamente dal numero elementi. 
+                <b>Al termine procedere direttamente con il salvataggio (premere "SALVA").</b><br><br><br><hr>
+                
+              <h4>- Percorso effettuato con problematiche su specifiche  vie</h4><br>
+                1) Selezionare la problematica relativa<br>
+                2) Selezionare il nome della via (si può ripetere più volte su vie diverse) e poi cliccare su "Applica"
+                La causale verrà applicata solo a quella via (interamente). 
+                <b>Al termine procedere direttamente con il salvataggio (premere "SALVA").</b><br><br><br><hr> 
+                
+              <h4>- Percorso interamente non effettuato</h4><br>
+                1) Selezionare la problematica relativa<br>
+                2) Cliccare su applica.
+                Automaticamente tutto il percorso avrà la causale prescelta e gli elementi azzerati. 
+                <b>Al termine procedere direttamente con il salvataggio (premere "SALVA").</b> 
+          </p>`;
+
+
+  var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+  var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+    return new bootstrap.Popover(popoverTriggerEl, {
+      html: true,
+      placement: 'bottom',
+      content: popoverContent
+    })
+  })
 
 
 </script>

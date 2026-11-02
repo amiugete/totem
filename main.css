@@ -31,6 +31,10 @@
 }
 
 
+.popover-xl {
+    --bs-popover-max-width: 80vw;
+}
+
 .container-fluid {
     padding-right: 15px;
     padding-left: 15px;
