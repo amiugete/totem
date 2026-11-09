@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 # definisco quanto andare indietro con i giorni
-$giorni_indietro=60;
+$giorni_indietro=intval($_ENV['GIORNI_INDIETRO']) ?? 7;
 
 //require_once('./check_utente.php');
 
@@ -119,7 +119,18 @@ if ($check_modal!=1){
             <a class="dropdown-item" href="./backoffice_spazz_ext.php">Igiene (Spazzamento / lavaggio / aree verdi, etc)</a>         
           </div>
         </li>
-        <?php } ?>
+        <?php if ($check_superedit > 0) {  // da togliere il 17/11/2026 quando andiamo in produzione ?>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="navbarDropdown1">
+          Report
+          </a>
+          <div class="dropdown-menu" id="navbarDropdown1" aria-labelledby="navbarDropdown1">
+            <a class="dropdown-item" href="./backoffice_registrazioni.php">Registrazioni servizi</a>
+            <a class="dropdown-item" href="./backoffice_carburante.php">Carburante</a>         
+          </div>
+        </li>
+        <?php } // da togliere il 17/11/2026 quando andiamo in produzione
+        } ?>
         <?php if ($check_superedit > 0) { ?>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="navbarDropdown1">
@@ -128,7 +139,8 @@ if ($check_modal!=1){
           <div class="dropdown-menu" id="navbarDropdown1" aria-labelledby="navbarDropdown1">
             <a class="dropdown-item" target="_blank" href="./consuntivazione_raccolta.php?operatore=9999">Totem raccolta</a>
             <a class="dropdown-item" target="_blank" href="./consuntivazione_spazzamento.php?operatore=9999">Totem spazzamento</a> 
-            <a class="dropdown-item" target="_blank" href="./selezione_servizi.php?operatore=9999">Selezione servizi</a>        
+            <a class="dropdown-item" target="_blank" href="./selezione_servizi.php?operatore=9999">Selezione servizi</a> 
+            <a class="dropdown-item" target="_blank" href="./rifornimenti_carburante.php?operatore=9999">Registra rifornimento carburante</a>       
           </div>
         </li>
         <?php } ?>
