@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 
 <head>
 
@@ -15,8 +15,9 @@ if (session_status() === PHP_SESSION_NONE) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="roberto" >
+    <meta name="google" content="notranslate">
 
-    <title>Gestione servizi</title>
+    <title>Consuntivazione spazzamento</title>
 <?php 
 require_once('./req.php');
 
@@ -38,9 +39,19 @@ $badge=$_GET['operatore'] ?? ''; # altrimenti vuoto
 <style>
   
   body {
-      background-color: #b3d7b3 !important; 
+      /*background-color: #b3d7b3 !important; */
+       background-color: #E8F3ED !important;
       /*background:linear-gradient(to left, #A9A9A9, #8FBC8F);*/
     }
+
+  .modal-body {
+    background-color: #E8F3ED !important;
+  }
+  
+  #PercorsoModal .table {
+    --bs-table-bg: #E8F3ED;
+    --bs-table-color: inherit;
+}
 
   .container {
     font-size: 21px; /* modifica la dimensione del testo per tutto il corpo */
@@ -68,7 +79,22 @@ $badge=$_GET['operatore'] ?? ''; # altrimenti vuoto
 
 <div class="container">
 
-<img src="./img/amiu_small_white.png"  style="margin-top: 25px; margin-bottom: 20px; width: 200px;" class="img-fluid d-block mx-auto" alt="...">
+<div class="row justify-content-md-center mt-4"> 
+  <div class="col-md-auto d-flex flex-column align-items-center">
+
+  <!--img src="./img/amiu_small_white.png" style="margin-top: 25px; margin-bottom: 20px; width: 200px;" class="img-fluid d-block mx-auto" alt="..."-->
+    <h1 class="mb-1" style="margin-top: 30px; margin-bottom: 30px;">
+      <i class="fa-solid fa-broom"></i>
+    </h1>
+
+    <h2 class="mt-0">
+      <i class="fa-solid fa-list-check"></i>
+      Consuntiva servizio igiene
+    </h2>
+  </div>
+</div>
+
+
 <hr>
 
   <?php
@@ -90,7 +116,7 @@ $badge=$_GET['operatore'] ?? ''; # altrimenti vuoto
   // cerco su quale UT è stata fatta l'ultima consuntivazione
 
 
-  $query_ut_operatore='with consuntivazioni_persona as (
+  $query_ut_operatore="with consuntivazioni_persona as (
 select ve.datainsert, cpsxa.id_uo, cpsxa.desc_uo, ve.codice 
 from spazzamento.v_effettuati ve 
 join spazzamento.cons_percorsi_spazz_x_app cpsxa 
@@ -102,10 +128,29 @@ from raccolta.v_effettuati ve
 join raccolta.cons_percorsi_raccolta_amiu cpsxa 
 	on cpsxa.id_tappa = ve.tappa
 where ve.codice = $1
+union
+select r.datainsert, 
+case 
+	when id_qualifica = 22 then mu1.id_uo  
+	else mu.id_uo
+end, 
+case 
+	when id_qualifica = 22 then mu1.desc_uo  
+	else mu.desc_uo 
+end, 
+vpes.codice_badge::text
+from servizi.registrazioni r  
+left join servizi.servizi_per_ekovision spe on spe.id_percorso = r.id_percorso 
+and r.datalav between spe.data_inizio_validita and spe.data_fine_validita 
+join totem.v_personale_ekovision_step1 vpes 
+	on lpad(vpes.matricola::text, 5, '0'::text ) = lpad(r.codice::text, 5, '0'::text)
+left join servizi.mail_ut mu on mu.id_ut_sit = spe.id_uo_sit 
+left join servizi.mail_ut mu1 on mu1.id_ut_sit = spe.id_rimessa_sit
+where vpes.codice_badge::text  = $1
 )
 select * from consuntivazioni_persona 
 order by 1 desc limit 1
-  ';
+  ";
 
 
   $result_operatore = pg_prepare($conn_hub, "query_ut_operatore", $query_ut_operatore);
@@ -136,9 +181,10 @@ if (pg_last_error($conn_hub)){
     <?php 
     
        $consuntivatore = $badge;
+    $tipo_servizio_call = 'SPAZZAMENTO';
     require_once('selezione_operatore.php');
 
-    echo 'Operatore con badge '. $badge . ' ('.$op.')';
+    echo '<i class="fa-solid fa-user"></i> Operatore con badge '. $badge . ' ('.$op.')';
 
     if ($desc_last_uo) {
       echo '<br><small>Ultima consuntivazione su '. $desc_last_uo.'</small>';
@@ -146,6 +192,18 @@ if (pg_last_error($conn_hub)){
       echo '<br><small>Operatore che non ha mai consuntivato</small>';
     }
 
+    if ($id_percorso_reg){
+      if ($consuntivato_reg == 1){
+        echo "<div class='alert alert-success' role='alert'>";
+      } elseif ($consuntivato_reg == 0){
+        echo "<div class='alert alert-warning' role='alert'>";
+      }
+      echo "L'utente si è già registrato sul percorso ".$id_percorso_reg. " - " . $desc_percorso_reg."";
+      if ($consuntivato_reg == 1){
+        echo " che risulta già consuntivato";
+      }
+      echo"</div>";
+    }
     $today = new DateTime('now');
     $timezone = new DateTimeZone('Europe/Rome');
     $today->setTimezone($timezone);
@@ -238,15 +296,15 @@ if (pg_last_error($conn_hub)){
 <div class="modal fade" id="PercorsoModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"> 
     <div class="modal-dialog modal-dialog-scrollable modal-fullscreen">
       <div class="modal-content">
-        <div class="modal-header">
+        <!--div class="modal-header"-->
           <!--h5 class="modal-title" id="exampleModalLabel">Titolo</h5-->
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
+          <!--button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div-->
       <div class="modal-body">
                 <!-- output data here-->
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fa-solid fa-rotate-left"></i> Torna indietro</button>
       </div>
     </div>
   </div>
@@ -254,11 +312,27 @@ if (pg_last_error($conn_hub)){
 
 
 
+<!-- MODAL VUOTO DA POPOLARE CON SERVIZI -->
+<div class="modal fade" id="PercorsoModal2" tabindex="-1" aria-hidden="true"> 
+    <div class="modal-dialog modal-dialog-scrollable modal-fullscreen">
+      <div class="modal-content">
+      <div class="modal-body">
+                <!-- output data here-->
+      </div>
+      <!--div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fa-solid fa-rotate-left"></i> Torna indietro</button>
+      </div-->
+    </div>
+  </div>
+</div>
+
 
   <script>
 
 
-
+// nel caso in cui l'operatore si sia registrato precedentemente
+const idServizioReg = <?php echo json_encode($id_servizio_reg ?? ''); ?>;
+const idPercorsoReg = <?php echo json_encode($id_percorso_reg ?? ''); ?>;
 
 
 // sostituisce completamente le options e re-instanzia selectpicker
@@ -340,6 +414,15 @@ function ensureSelectpicker(selector) {
           $('#servizio').append(response);        // ➕ aggiungi nuove
           $('#servizio').selectpicker('render');  // 🔁 renderizza di nuovo
           $('#percorsi').empty();                 // 🧹 svuota opzioni
+
+          // Se abbiamo un servizio registrato, lo selezioniamo
+          if (idServizioReg) {
+              $('#servizio').selectpicker('val', idServizioReg);
+
+              // Carico i percorsi relativi al servizio
+              cambiato_servizio(idServizioReg);
+          }
+
         },
         error: function(xhr, status, error) {
             console.error("Errore AJAX:", error);
