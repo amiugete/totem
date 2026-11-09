@@ -763,11 +763,23 @@ $('#js-date3').datepicker({
       endDate:today,
       startDate:week_before,
       language:'it', 
-      autoclose: true
+      autoclose: true, 
+      orientation: 'bottom left', // non funziona.. aggiungo opzione sotto
+      container: 'body'
+
   });
 
+// per spostarlo sotto
+$('#js-date3').on('show', function () {
 
+    const dp = $(this).data('datepicker');
+    const inputOffset = $(this).offset();
 
+    dp.picker.css({
+        top: inputOffset.top + $(this).outerHeight()
+    });
+
+});
 
 // Funzione di aggiornamento pulsanti
 function aggiornaBottoniNavigazione() {
