@@ -487,6 +487,31 @@ order by 2";
 
 
 
+      <!--  SPAZIO FILTRI -->
+
+      <?php 
+        // filtro via
+        $result2 = pg_execute($conn_hub, "query_vie", array($id, $datalav));  
+        if (!pg_last_error($conn_hub)){
+            #$res_ok=0;
+        } else {
+            pg_last_error($conn_hub);
+            $res_ok= $res_ok+1;
+        }
+
+        #echo $result;
+
+        ?>
+        <datalist id="lista_vie">
+          <?php
+          while ($r2 = pg_fetch_assoc($result2)) {
+              ?>
+              <option value="<?= htmlspecialchars($r2["nome_via"]) ?>">
+              <?php
+          }
+          pg_free_result($result2);
+          ?>
+          </datalist>
 
       <!-- SPAZIO DEDICATO ALL'OUTPUT -->
       <div id="ConsOutput" class="text-center">
@@ -528,7 +553,7 @@ order by 2";
 				data-side-pagination="false" 
         data-show-refresh="false" data-show-toggle="false"
         data-show-columns="false"
-				data-filter-control="false"
+				data-filter-control="true"
         data-sort-select-options = "true"
         data-url="./tables/report_totem_percorsi_cons_r.php?edit=<?php echo $edit;?>&id=<?php echo $id;?>&datalav=<?php echo $datalav;?>&id_uo=<?php echo $id_uo;?>" 
         data-toolbar="#toolbar1" 
@@ -568,6 +593,15 @@ order by 2";
 
 
 var $table_tappe = $('#totem_percorsi_dettaglio_r');
+
+
+// trasformo filtro riferiemento in elenco vie
+$table_tappe.on('post-header.bs.table', function () {
+
+    $('.bootstrap-table-filter-control-riferimento')
+        .attr('list', 'lista_vie');
+
+});
 
 
 $(function() {
