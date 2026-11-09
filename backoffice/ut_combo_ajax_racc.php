@@ -16,9 +16,10 @@ if (!$data) {
     exit;
 }
 
-$query_ut = "SELECT DISTINCT id_uo, desc_uo
+$query_ut = "SELECT DISTINCT id_uo, upper(desc_uo) as desc_uo
              FROM raccolta.cons_percorsi_raccolta_amiu
              WHERE to_date($1, 'DD/MM/YYYY') BETWEEN data_inizio AND data_fine
+             AND desc_uo not ilike '%backoffice%'
              ORDER BY desc_uo";
 
 $result = pg_prepare($conn_hub, "combo_query", $query_ut);

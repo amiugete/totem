@@ -21,11 +21,13 @@ if (!$ut) {
     exit;
 }
 
-$query_servizio = "SELECT DISTINCT id_servizio, desc_servizio
+$query_servizio = "SELECT  id_servizio, desc_servizio,
+count(distinct cpsxa.id_percorso )
               FROM raccolta.cons_percorsi_raccolta_amiu cpsxa
               where cpsxa.id_uo=$1::int
               and to_date($2, 'DD/MM/YYYY') between cpsxa.data_inizio and cpsxa.data_fine               
-              order by 2";
+              group by id_servizio, desc_servizio
+              order by 3 desc, 2";
 
 $result = pg_prepare($conn_hub, "query_servizio", $query_servizio);
 if (pg_last_error($conn_hub)){

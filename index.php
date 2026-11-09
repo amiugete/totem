@@ -44,7 +44,7 @@ setcookie("cisiamo", 'OK', [
     <meta name="description" content="">
     <meta name="author" content="roberto" >
 
-    <title>Gestione servizi</title>
+    <title>Backoffice totem</title>
 <?php 
 require_once('./req.php');
 
@@ -67,87 +67,213 @@ require_once 'conn_ok.php';
 
 </head>
 
-<body>
 
+<body class="pagina-menu">
 
-<?php require_once('./navbar_up.php');
-$name=dirname(__FILE__);
-
-//************************************************************************************ */
-// Controllo permessi
-/*if (trim($check_coge) != 't') { 
-  require('assenza_permessi.php');
-  exit;
-}*/
-//************************************************************************************ */
-
-
-
-
+<?php
+require_once('./navbar_up.php');
+$name = dirname(__FILE__);
 ?>
-  
- 
+
+<style>
+
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+    }
+
+    .pagina-menu {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
 
 
-<div class="container text-center">
+    /* Area centrale */
 
-  <div class="row">
+    .menu-mattonelle {
+        flex: 1;
 
-  
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
-    <div class="col">
-      <a type="button" class="btn btn-primary" href="./backoffice_racc_ext.php">
-        <i class="fa-solid fa-trash"></i> Consuntivazione raccolta
-      </a>
+        padding: 40px;
+    }
+
+
+    .mattonelle-container {
+
+        display: flex;
+        flex-wrap: wrap;
+
+        justify-content: center;
+        align-items: center;
+
+        gap: 30px;
+
+        max-width: 1000px;
+    }
+
+
+    /* MATTONELLA */
+
+    .mattonella {
+
+        width: 300px;
+        height: 230px;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        text-decoration: none;
+
+        background: #ffffff;
+
+        border-radius: 20px;
+
+        box-shadow:
+            0 4px 15px rgba(0, 0, 0, 0.12);
+
+        color: #212529;
+
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+
+    .mattonella:hover {
+
+        color: #212529;
+        text-decoration: none;
+
+        transform: translateY(-6px);
+
+        box-shadow:
+            0 12px 30px rgba(0, 0, 0, 0.18);
+    }
+
+
+    .mattonella:active {
+        transform: translateY(-2px);
+    }
+
+
+    /* ICONA */
+
+    .mattonella i {
+
+        font-size: 4.5rem;
+
+        margin-bottom: 22px;
+    }
+
+
+    /* TESTO */
+
+    .mattonella-titolo {
+
+        font-size: 1.3rem;
+
+        font-weight: 600;
+
+        text-align: center;
+
+        max-width: 260px;
+    }
+
+
+    /* Colori */
+
+    .mattonella-raccolta i {
+        color: #0d6efd;
+    }
+
+    .mattonella-spazzamento i {
+        color: #198754;
+    }
+
+
+</style>
+
+
+<div class="menu-mattonelle">
+
+    <div class="mattonelle-container">
+
+
+        <a class="mattonella mattonella-raccolta"
+           href="./backoffice_racc_ext.php">
+
+            <i class="fa-solid fa-dumpster"></i>
+
+            <div class="mattonella-titolo">
+                Consuntivazione raccolta
+            </div>
+
+        </a>
+
+
+        <a class="mattonella mattonella-spazzamento"
+           href="./backoffice_spazz_ext.php">
+
+            <i class="fa-solid fa-broom"></i>
+
+            <div class="mattonella-titolo">
+                Consuntivazione spazzamento/lavaggio
+            </div>
+
+        </a>
+
+
+        <!--
+        ESEMPIO TERZA MATTONELLA
+
+        <a class="mattonella"
+           href="./altra_pagina.php">
+
+            <i class="fa-solid fa-car"></i>
+
+            <div class="mattonella-titolo">
+                Altra funzione
+            </div>
+
+        </a>
+        -->
+
+
+        <!--
+        ESEMPIO QUARTA MATTONELLA
+
+        <a class="mattonella"
+           href="./altra_pagina.php">
+
+            <i class="fa-solid fa-gear"></i>
+
+            <div class="mattonella-titolo">
+                Altra funzione
+            </div>
+
+        </a>
+        -->
+
     </div>
 
-
-    <div class="col">
-      <a type="button" class="btn btn-primary" href="./backoffice_spazz_ext.php">
-        <i class="fa-solid fa-broom"></i> Consuntivazione spazzamento/lavaggio
-      </a>
-    </div>
-
-
-  </div>
-  <!--hr>
-  <div class="row">
-    <div class="col">
-      <a type="button" class="btn btn-primary" disabled="" href="./backoffice_spazz_ext.php">
-      <i class="fa-solid fa-trash"></i> Consuntivazione raccolta
-      </a>
-    </div>
-  </div-->
-
-  
 </div>
 
-<?php 
+
+<?php
 require_once('req_bottom.php');
 require('./footer.php');
 ?>
 
-
-<script type="text/javascript">
- var today = new Date();
- var week_before=new Date();
- week_before.setDate(week_before.getDate() - 7);
-$('#js-date3').datepicker({
-      format: 'dd/mm/yyyy',
-      todayBtn: "linked", // in conflitto con startDate
-      endDate:today,
-      startDate:week_before,
-      language:'it', 
-      autoclose: true
-  });
-
-
-  //$('#myIframe').attr('src', "https://expo.wingsoft.it/amiu/webapp/indexdesk.php?operatore=0170"); 
- 
-  
-</script>
-
-
 </body>
+
+
+
 
 </html>

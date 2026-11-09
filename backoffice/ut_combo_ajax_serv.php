@@ -28,7 +28,7 @@ SELECT spe.id_rimessa_sit as id_uo_sit, spe.desc_rimessa as desc_ut
  and id_zona in (1,2,3,5, 6) 
  and spe.id_rimessa_sit is not null
 ) 
-select distinct mu.id_uo, desc_ut as desc_uo
+select distinct mu.id_uo, upper(desc_ut) as desc_uo
 from selezione_ut su
 left join servizi.mail_ut mu on mu.id_ut_sit = su.id_uo_sit  
 ORDER BY 2";

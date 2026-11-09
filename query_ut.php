@@ -6,8 +6,10 @@ if (isset($filter_totem)){
   $filter_totem_ok= " "; 
 }
 
-$query_ut="select id_ut, descrizione
+$query_ut="select id_ut, descrizione, 
+id_uo
   from topo.ut u 
+  left join anagrafe_percorsi.cons_mapping_uo cmu on cmu.id_uo_sit  = u.id_ut 
   where ".$filter_totem_ok." id_ut in   
   (select 
     id_ut

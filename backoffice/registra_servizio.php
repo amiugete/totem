@@ -11,7 +11,9 @@ require_once '../conn_ok.php';
 
 $cod_percorso   = $_POST['cod_percorso']   ?? '';
 $datalav        = $_POST['datalav']        ?? '';
-$consuntivatore  = $_POST['consuntivatore'] ?? '';
+$consuntivatore = !empty($_POST['consuntivatore'])
+    ? $_POST['consuntivatore']
+    : 'badge_' . ($_POST['badge'] ?? '');
 $mansione       = $_POST['mansione']       ?? '';
 $guida          = $_POST['guida']          ?? '';
 $sportello      = $_POST['sportello']      ?? null;
@@ -67,7 +69,8 @@ if (pg_last_error($conn_hub)){
 }
 
 if (!isset($res_ok) || $res_ok==0) {
-    echo "OK";
+    echo "Registrata la matricola ".$consuntivatore. " sul percorso ".$cod_percorso." del " .$datalav. ". 
+    <br>Per tornare indietro clicca su <i>'Torna indietro'</i> in bassso a destra o chiudi tutto con la <font color='red'><b>X</b></font> rossa in alto";
 } else {
     echo '<i class="bi bi-exclamation-triangle-fill"></i> Errore durante la registrazione del servizio.';
 }
