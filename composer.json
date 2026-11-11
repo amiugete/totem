@@ -6,7 +6,6 @@
         "fortawesome/font-awesome": "^6.7",
         "snapappointments/bootstrap-select": "^1.13",
         "wenzhixin/bootstrap-table": "^1.24",
-        "eternicode/bootstrap-datepicker": "^1.10",
         "hhurz/tableexport.jquery.plugin": "^1.33",
         "moment/moment": "^2.30"
     },

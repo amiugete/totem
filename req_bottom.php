@@ -91,8 +91,8 @@
 <!--script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"  charset="UTF-8" 
 integrity="sha512-T/tUfKSV1bihCnd+MxKD0Hm1uBBroVYBOYSk1knyvQ9VyZJpc/ALb4P0r6ubwVPSGB2GvjeoMAJJImBG12TiaQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script-->
 
-<script src="./vendor/eternicode/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"  charset="UTF-8"></script>
-<script src="./vendor/eternicode/bootstrap-datepicker/dist/locales/bootstrap-datepicker.it.min.js"  charset="UTF-8"></script>
+<script src="./node_modules/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"  charset="UTF-8"></script>
+<script src="./node_modules/bootstrap-datepicker/dist/locales/bootstrap-datepicker.it.min.js"  charset="UTF-8"></script>
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.1.1/list.min.js"></script>

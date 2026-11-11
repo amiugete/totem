@@ -71,7 +71,7 @@ $partenza_ekovision= "20/11/2023";
 
 
 <!-- BOOTSTRAP DATEPICKER -->
-<link rel="stylesheet" href="./vendor/eternicode/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css"/>
+<link rel="stylesheet" href="./node_modules/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css"/>
 
 
 
