@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "bootstrap-datepicker": "^1.10.1",
+    "daterangepicker": "file:daterangepicker-4.0.2.tgz",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   }
 }

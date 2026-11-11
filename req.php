@@ -130,7 +130,7 @@ var onResize = function() {
 <?php }?>
 
 <!-- Per questo non uso composer perchè il pacchetto è obsoleto -->
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+<link rel="stylesheet" type="text/css" href="./node_modules/daterangepicker/daterangepicker.css" />
 
 <link rel="stylesheet" href="./main.css">
 
