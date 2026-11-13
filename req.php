@@ -1,18 +1,28 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+
+// Individua la pagina corrente
+$currentPage = basename($_SERVER['SCRIPT_NAME']);
+
+// Eccezioni: pagine che non richiedono autenticazione
+$publicPages = [
+    'login.php'
+];
+
+// Controllo parametri
+$controllo = $_GET['operatore'] ?? '';
+
+if ($controllo === '') {
+    $controllo = $_POST['consuntivatore'] ?? '';
 }
 
-$controllo=$_GET['operatore'] ?? ''; # altrimenti vuoto 
-//echo $controllo;
-//exit();
-// setcookie funziona solo se non ci sono degli output prima per cui l'ho spostato qua;
-if ($controllo==''){
-    $controllo=$_POST['consuntivatore'] ?? '';
-    if ($controllo==''){
-        require_once('./check_utente.php');
-    }
-}   
+// Richiede autenticazione solo se necessario
+if (
+    $controllo === '' &&
+    !in_array($currentPage, $publicPages, true)
+) {
+    require_once __DIR__ . '/check_utente.php';
+}
+
 
 
 // parametri iniziali 
@@ -86,42 +96,7 @@ $partenza_ekovision= "20/11/2023";
 
 <link rel="stylesheet" href="./vendor/leaflet-locatecontrol-0.79.0/dist/L.Control.Locate.css"-->
 
-<script>
 
-var onResize = function() {
-    var new_height= 10+$(".banner").height()+$(".navbar-sticky-top").height()
-    console.log(new_height);
-    // apply dynamic padding at the top of the body according to the fixed navbar height
-    $("body").css("margin-top", new_height);
-
-
-    var new_width=$(".banner").width()
-    console.log(new_width);
-    if (new_width < 760) {
-        $("#sit_btn1").css("display", 'none'); 
-        $("#link_pc1").css("display", 'none');
-        $("#link_pc2").css("display", 'none');
-        //$("#intestazione").css("display", 'none');
-        //$(".banner").css("height", 0);
-        $(".pull-left").css("height", 0);
-        //$(".navbar-sticky-top").css("top", 0);
-    } else {
-        $("#sit_btn1").css("display", 'inline-block'); 
-        $("#link_pc1").css("display", 'inline-block');
-        $("#link_pc2").css("display", 'inline-block');
-        $("#intestazione").css("display", 'inline-block');
-        
-
-    }
-    
-};
-
-</script>
-
-
-
-
-<!--script src="./jquery.js"></script-->
 
 
 <?php if ($check_modal!=1){?>
@@ -129,10 +104,10 @@ var onResize = function() {
 <script src="./vendor/components/jquery/jquery.min.js"></script>
 <?php }?>
 
-<!-- Per questo non uso composer perchè il pacchetto è obsoleto -->
+<!-- Per questo non uso composer perchè il pacchetto è obsoleto. Migrato con urgenza a npm -->
 <link rel="stylesheet" type="text/css" href="./node_modules/daterangepicker/daterangepicker.css" />
 
-<link rel="stylesheet" href="./main.css">
+<link rel="stylesheet" href="./includes/main.css">
 
 <?php if (!isset($check_modal)){
     $check_modal=0;
@@ -140,17 +115,9 @@ var onResize = function() {
 if ($check_modal!=1) { ?>
 
 
-<link rel='icon' href='./favicon.ico' type='image/x-icon' sizes="16x16">
+    <link rel='icon' href='./favicon.ico' type='image/x-icon' sizes="16x16">
 
-<script>
-// attach the function to the window resize event
-$(window).resize(onResize);
-
-// call it also when the page is ready after load or reload
-$(function() {
-  onResize();
-});
-</script>
+    <script src="./js/resize.js"></script>
 
 
 
@@ -181,11 +148,7 @@ function the_page_title()
         //$_SESSION['test']=0;
     } else if($app_env =='test') {
         ?>
-        <style>
-            .navbar {
-                background: #ff0000;
-            }
-        </style>
+        <link rel="stylesheet" href="./includes/navbar_test.css">
         <?php
         $test=1;
         //$_SESSION['test']=1;

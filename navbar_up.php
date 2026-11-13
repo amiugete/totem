@@ -1,7 +1,5 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/includes/session_check.php';
 
 # definisco quanto andare indietro con i giorni
 $giorni_indietro=intval($_ENV['GIORNI_INDIETRO']) ?? 7;

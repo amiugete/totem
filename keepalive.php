@@ -1,7 +1,5 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/includes/session_check.php';
 
  $timeout  = 6 * 60 * 60; // 6 h * 60 min * 60 sec
 

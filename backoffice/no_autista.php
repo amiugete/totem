@@ -1,12 +1,8 @@
 <?php
 //session_set_cookie_params($lifetime);
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-
-require_once '../carica_env.php';
-require_once '../conn_ok.php';
+#require_once __DIR__ . '/../includes/session_check.php';
+require_once __DIR__ . '/../carica_env.php';
+require_once __DIR__ . '/../conn_ok.php';
 
 
 $id_percorso=$_POST['id'];
@@ -56,7 +52,7 @@ if (pg_last_error($conn_hub)){
 if ($res_ok==0){
     echo '<div class="alert alert-success" role="alert"> Dati salvati correttamente!</div>';
 } else {
-    echo '<div class="alert alert-danger" role="alert">  ERRORE - contatta assterritorio@amiu.genova.it</font>';
+    echo '<div class="alert alert-danger" role="alert">  ERRORE - contatta assterritorio@amiu.genova.it</font></div>';
 }
 
 
@@ -66,7 +62,3 @@ if ($res_ok==0){
 
 
 ?>
-
-
-
-

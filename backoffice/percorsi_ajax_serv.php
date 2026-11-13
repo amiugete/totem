@@ -1,9 +1,9 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-require_once '../carica_env.php';
-require_once '../conn_ok.php';
+#require_once __DIR__ . '/../includes/session_check.php';
+require_once __DIR__ . '/../carica_env.php';
+require_once __DIR__ . '/../conn_ok.php';
+
+
 
 $data = $_GET['data_percorsi'];
 $ut = $_GET['ut'];

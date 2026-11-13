@@ -1,8 +1,6 @@
 <?php
 //session_set_cookie_params($lifetime);
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/includes/session_check.php';
 
 setcookie("username", 'Amiu1', [
   'expires' => time() + 86400,
@@ -531,42 +529,6 @@ window.consEvents = {
     }
 };
 
-
-// questa era una prova per collegarsi a Gava
-/*
-window.consEvents = {
-    'click .info#cons': function (e, value, row, index) {
-        console.log('Cliccato cons');
-        var codperc = row.id_percorso;
-        var servizio1=row.descr_servizio;
-        var zonaivo = row.descr_percorso; 
-        var data1 = moment(row.datalav).format('YYYY-MM-DD');
-        var zona1 = row.uo_esec; 
-        console.log(codperc);
-        console.log(servizio1);
-        console.log(zonaivo);
-        console.log(data1);
-        console.log(zona1);
-        var operatore = '6409';
-        var consuntivatore = 'UT170';
-        var admin1 = '1958';
-        $.ajax({   
-            type: "POST",
-            url: "<?php echo $wingsoft_url?>indexspazzasuser.php",
-            data: 'operatore=' + operatore + 'servizio1=' + servizio1 + 'zonaivo=' + zonaivo +'operatore=' + zona1 +'zona1=' + consuntivatore + 'codperc=' + codperc + '&data1='+data1,
-            dataType: "text", 
-            crossDomain: true,
-            xhrFields: {
-                withCredentials: true
-            },
-            success: function(response){                    
-                $(".modal-body").html(response); 
-            }
-        });
-        $('#viewConsModal').modal('show')
-    }
-};
-*/
 
 
 

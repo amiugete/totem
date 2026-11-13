@@ -1,6 +1,6 @@
 .banner {
     top: 0;
-    background: url(./img/bg-navbar-rid.png);
+    background: url(../img/bg-navbar-rid.png);
     z-index: 1030;
     padding-left: 0;
     padding-right: 0;
@@ -8,7 +8,7 @@
 
 
 .banner div {
-    background: url(./img/lanterna-rid.png) right no-repeat;
+    background: url(../img/lanterna-rid.png) right no-repeat;
     z-index: 1000;
     font-size: 36px;
     color: #fff;

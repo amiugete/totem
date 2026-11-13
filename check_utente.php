@@ -6,23 +6,42 @@ function redirect($url)
     exit;
 }
 
-
 // =========================
 // CONFIG
 // =========================
-$lifetime = 8 * 60 * 60 ; // secondi per sessione logica (8 h)
+require_once __DIR__ . '/includes/session_check.php';
 
-$timeout  = 6 * 60 * 60; // 6 ore sessione logica
-
-ini_set('session.gc_maxlifetime', $lifetime);
-session_set_cookie_params($lifetime);
+// Timeout logico di inattività
+//$timeout = 6 * 60 * 60;
 
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+
+$timeoutInattivita = 3 * 60 * 60;
+$timeoutAssoluto = 8 * 60 * 60;
+
+$now=time();
+
+//DA PRINTARE QUALCOSA PER CAPIRE COSA NON VA
+
+
+
+// Verifica scadenza per inattività
+if (
+    !isset($_SESSION['last_activity']) ||
+    ($now - $_SESSION['last_activity']) > $timeoutInattivita
+) {
+    echo "last_act: ". $_SESSION['last_activity']."<br>";
+    echo ($now - $_SESSION['last_activity']) ."<br>";
+    echo "timeoutInattivita= ". $timeoutInattivita."<br>";
+    echo "Sono qua";
+    exit();
+    $_SESSION = [];
+    session_destroy();
+    redirect('./login.php?expired=1');
 }
 
 
+/*
 // =========================
 // KEEP ALIVE LOGICO
 // =========================
@@ -37,6 +56,22 @@ if (isset($_SESSION['last_activity']) &&
 }
 
 $_SESSION['last_activity'] = time();
+*/
+
+
+
+// Verifica scadenza assoluta
+if (
+    !isset($_SESSION['auth_time']) ||
+    ($now - $_SESSION['auth_time']) > $timeoutAssoluto
+) {
+    $_SESSION = [];
+    session_destroy();
+    redirect('./login.php?expired=1');
+}
+
+// Aggiorna ultima attività
+$_SESSION['last_activity'] = $now;
 
 
 // =========================
@@ -48,14 +83,14 @@ $userId = null;
 if (isset($_GET['jwt'])) {
 
     // pulizia cookie (come nel tuo codice)
-    if (isset($_SERVER['HTTP_COOKIE'])) {
+    /*if (isset($_SERVER['HTTP_COOKIE'])) {
         $cookies = explode(';', $_SERVER['HTTP_COOKIE']);
         foreach ($cookies as $cookie) {
             $parts = explode('=', $cookie);
             $name = trim($parts[0]);
             setcookie($name, '', time() - 1000, '/');
         }
-    }
+    }*/
 
     $token0 = $_GET['jwt'];
 
@@ -116,6 +151,8 @@ else if (isset($_SESSION['username'])) {
     }
 }
 
+
+/*
 // =========================
 // COOKIE FALLBACK
 // =========================
@@ -134,6 +171,8 @@ else if (isset($_COOKIE['un'])) {
         redirect('./login.php?expired=1');
     }
 }
+*/
+
 
 // =========================
 // ULTIMO CONTROLLO BLOCCANTE

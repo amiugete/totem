@@ -1,8 +1,7 @@
 <?php
 //session_set_cookie_params($lifetime);
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/includes/session_check.php';
+
 
 setcookie("username", 'Amiu1', [
   'expires' => time() + 86400,

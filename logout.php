@@ -1,8 +1,6 @@
 <?php 
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/includes/session_check.php';
 
 // definisco la variabile lifetime
 $lifetime=86400;

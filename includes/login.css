@@ -1,0 +1,161 @@
+
+/*
+ * ============================================================
+ * LOGIN SIT - STILI SPECIFICI
+ * ============================================================
+ */
+
+
+/* ------------------------------------------------------------
+   PAGINA
+   ------------------------------------------------------------ */
+
+body.login-page {
+    margin-top: 77px;
+}
+
+
+/* ------------------------------------------------------------
+   CONTENITORE PRINCIPALE
+   ------------------------------------------------------------ */
+
+.login-container {
+    padding-top: 20px;
+    padding-bottom: 30px;
+}
+
+
+/* ------------------------------------------------------------
+   TITOLO
+   ------------------------------------------------------------ */
+
+.login-title {
+    color: orange;
+    margin-bottom: 25px;
+}
+
+.login-test-label {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 0.75em;
+    font-weight: normal;
+}
+
+
+/* ------------------------------------------------------------
+   MESSAGGI DI ERRORE
+   ------------------------------------------------------------ */
+
+.login-error {
+    color: #b02a37;
+    background-color: #f8d7da;
+    border: 1px solid #f5c2c7;
+    border-radius: 5px;
+    padding: 12px 15px;
+    margin-bottom: 20px;
+}
+
+
+/* ------------------------------------------------------------
+   FORM
+   ------------------------------------------------------------ */
+
+.login-form {
+    display: inline-block;
+    width: 100%;
+    max-width: 450px;
+}
+
+.login-form .form-group {
+    margin-bottom: 10px;
+}
+
+.login-form .form-label {
+    font-weight: 600;
+}
+
+
+/* ------------------------------------------------------------
+   TESTI DI AIUTO
+   ------------------------------------------------------------ */
+
+.login-help {
+    display: block;
+    margin-top: 6px;
+    color: #666;
+    font-style: italic;
+    line-height: 1.5;
+}
+
+
+/* ------------------------------------------------------------
+   CAMPO PASSWORD E PULSANTE MOSTRA/NASCONDI
+   ------------------------------------------------------------ */
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper input {
+    padding-right: 45px;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+
+    border: 0;
+    background: transparent;
+    color: #555;
+
+    padding: 5px;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.password-toggle:hover {
+    color: #000;
+}
+
+.password-toggle:focus-visible {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+
+/* ------------------------------------------------------------
+   PULSANTE LOGIN
+   ------------------------------------------------------------ */
+
+.login-submit {
+    margin-top: 10px;
+}
+
+.login-submit button {
+    min-width: 110px;
+}
+
+
+/* ------------------------------------------------------------
+   RESPONSIVE
+   ------------------------------------------------------------ */
+
+@media (max-width: 576px) {
+
+    body.login-page {
+        margin-top: 65px;
+    }
+
+    .login-container {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .login-form {
+        max-width: 100%;
+    }
+
+}

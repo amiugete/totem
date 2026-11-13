@@ -1,10 +1,6 @@
 <?php
 
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 if ($_ENV['APP_ENV'] === 'test') {
     define('BASE_URL', '/totem_test');
 } else {
@@ -70,3 +66,7 @@ $ldapDomain = $_ENV['LDAP_DOMAIN'] ?? null;
 #exit(); 
 $ldapHost = $_ENV['LDAP_HOST'] ?? null;
 $ldapPort = $_ENV['LDAP_PORT'] ?? null;
+
+
+# per controlli usati nel backoffice 
+$res_ok=0;

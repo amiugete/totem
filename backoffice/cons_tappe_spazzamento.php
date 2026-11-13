@@ -1,12 +1,8 @@
 <?php
 //session_set_cookie_params($lifetime);
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-
-require_once '../carica_env.php';
-require_once '../conn_ok.php';
+#require_once __DIR__ . '/../includes/session_check.php';
+require_once __DIR__ . '/../carica_env.php';
+require_once __DIR__ . '/../conn_ok.php';
 
 $cons_tappe=$_POST['cons_tappe'];
 //echo $cons_tappe.'<br>';
