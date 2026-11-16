@@ -206,7 +206,20 @@ if ($check_modal!=1){
             <li><b>Check superedit: </b><?php echo $check_superedit; ?></li>
           </ul>
         <hr>
-          In caso di modifiche fare scrivere dal proprio responsabile a assterritorio@amiu.genova.it 
+          <p>
+           In caso di modifiche fare scrivere dal proprio responsabile a assterritorio@amiu.genova.it
+      
+          </p>
+        <hr>
+        <?php if ($check_superedit > 0) {?>
+         Sessione PHP (solo per superuser):
+          <ul>
+            <li>Username: <?php echo $_SESSION['username'];?></li>
+            <li>userId: <?php echo $_SESSION['userId'];?></li>
+            <li>auth_time: <?php echo $_SESSION['auth_time'];?></li>
+            <li>last_activity: <?php echo $_SESSION['last_activity'];?></li>
+          </ul>
+        <?php } ?>
         <hr>
           <a class="dropdown-item" href="./logout.php">
             <i class="fas fa-sign-out-alt"></i> Logout

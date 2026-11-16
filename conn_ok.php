@@ -37,7 +37,7 @@ $conn_string = "host={$host_an} port={$port_an} dbname={$db_an} user={$user_an} 
 $conn = pg_connect($conn_string);
 
 if (!$conn) {
-    die('<br>Non riesco a connettermi al db con le anagrafiche.');
+    die('<br>Non riesco a connettermi al db.');
 }
 
 

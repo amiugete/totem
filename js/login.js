@@ -67,3 +67,13 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 });
+
+
+
+function turnstileScaduto() {
+    turnstile.reset();
+}
+
+function turnstileErrore() {
+    turnstile.reset();
+}

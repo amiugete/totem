@@ -35,7 +35,7 @@ Version: 2.0
 
  */
 
-require_once __DIR__ . '/includes/session_config.php';
+
 
 require_once __DIR__ . '/includes/session_check.php';
 
@@ -64,7 +64,168 @@ if (empty($_SESSION['csrf_token'])) {
  */
 
 //require_once 'carica_env.php';
-require_once 'conn_ok.php';
+require_once __DIR__ . '/conn_ok.php';
+
+
+# per il captcha
+$turnstileSiteKey = $_ENV['TURNSTILE_SITE_KEY'] ?? '';
+$turnstileSecretKey = $_ENV['TURNSTILE_SECRET_KEY'] ?? '';
+
+if ($turnstileSiteKey === '' || $turnstileSecretKey === '') {
+    error_log('Configurazione Turnstile mancante.');
+}
+
+
+
+/**
+ * Verifica i tentativi falliti per username e IP
+ * negli ultimi 15 minuti.
+ *
+ * Restituisce 0 se il login può procedere,
+ * altrimenti il numero di secondi da attendere.
+ */
+function verificaTentativiLogin($connessione, string $username, string $ip): int
+{
+    
+
+    $sql = "
+    SELECT
+        COUNT(*) AS tentativi,
+        coalesce(EXTRACT(EPOCH FROM (
+            NOW() - MAX(attempted_at)
+        )),0) AS secondi_trascorsi
+    FROM totem.login_attempts
+    WHERE username = $1
+      AND ip_address = $2::inet
+      AND success = FALSE
+      AND attempted_at > NOW() - INTERVAL '15 minutes'
+      AND attempted_at > COALESCE(
+          (
+              SELECT MAX(attempted_at)
+              FROM totem.login_attempts
+              WHERE username = $1
+                AND ip_address = $2::inet
+                AND success = TRUE
+          ),
+          '-infinity'::timestamptz
+      )
+";
+    
+
+    $result = pg_query_params($connessione, $sql, [$username, $ip]);
+    
+    if ($result === false) {
+        error_log('Errore verifica tentativi login: ' . pg_last_error($connessione));
+        throw new RuntimeException('Impossibile verificare i tentativi di login.');
+    }
+
+    $row = pg_fetch_assoc($result);
+
+    $tentativi = (int) $row['tentativi'];
+    $trascorsi = (int) ($row['secondi_trascorsi'] ?? 0);
+    //exit;
+    $attesa = match (true) {
+        $tentativi < 1  => 0,
+        $tentativi < 2  => 5,
+        $tentativi < 3  => 30,
+        $tentativi < 4 => 1500,
+        default         => 300
+    };
+
+    return max(0, $attesa - $trascorsi);
+}
+
+
+/**
+ * Registra un tentativo di autenticazione.
+ */
+function registraTentativoLogin(
+    $connessione,
+    string $username,
+    string $ip,
+    bool $success
+): void {
+    $sql = "
+        INSERT INTO totem.login_attempts
+            (username, ip_address, success)
+        VALUES ($1, $2::inet, $3)
+    ";
+
+    $result = pg_query_params(
+        $connessione,
+        $sql,
+        [$username, $ip, $success ? 'true' : 'false']
+    );
+
+    if ($result === false) {
+        error_log('Errore registrazione tentativo login: ' . pg_last_error($connessione));
+        throw new RuntimeException('Impossibile registrare il tentativo di login.');
+    }
+}
+
+/* ------------------------------------------------------------
+ * FUNZIONE PER CAPTCHA
+ * ------------------------------------------------------------
+*/
+
+
+function verificaTurnstile(
+    string $token,
+    string $secret,
+    string $ip,
+    string $hostnameAtteso
+): bool {
+
+    if ($token === '' || $secret === '' || $hostnameAtteso === '') {
+        return false;
+    }
+
+    $ch = curl_init(
+        'https://challenges.cloudflare.com/turnstile/v0/siteverify'
+    );
+
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => http_build_query([
+            'secret'   => $secret,
+            'response' => $token,
+            'remoteip' => $ip
+        ]),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 5,
+        CURLOPT_CONNECTTIMEOUT => 3
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    if ($response === false || $httpCode !== 200) {
+        error_log('Errore comunicazione Cloudflare Turnstile: ' . curl_error($ch));
+        //curl_close($ch);
+        return false;
+    }
+
+    //curl_close($ch);
+
+    $result = json_decode($response, true);
+
+    if (!is_array($result) || ($result['success'] ?? false) !== true) {
+        return false;
+    }
+
+    // Controllo hostname
+    $hostnameRicevuto = strtolower($result['hostname'] ?? '');
+    $hostnameAtteso = strtolower($hostnameAtteso);
+
+    if ($hostnameRicevuto !== $hostnameAtteso) {
+        error_log('Turnstile: hostname non corrispondente.');
+        return false;
+    }
+
+    return true;
+}
+
+
 
 
 /*
@@ -175,15 +336,15 @@ function getLoginRedirect(string $origine): string
 
 if (isset($_COOKIE['origine']) && $_COOKIE['origine'] !== '') {
 
-    $origine = $_COOKIE['origine'];
+   $origine = getLoginRedirect($_COOKIE['origine']);
 
 } else {
 
-    $origine = $_SESSION['origine'] ?? 'index.php';
+    $origine = getLoginRedirect($_SESSION['origine'] ?? 'index.php');
 
     setcookie('origine', $origine, [
         'expires'  => time() + ($lifetime * 7),
-        'path'     => '/',
+        'path'     => session_get_cookie_params()['path'],
         'secure'   => true,
         'httponly' => true,
         'samesite' => 'Lax'
@@ -226,171 +387,138 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ldapLogin'])) {
         exit('Richiesta non valida. Ricarica la pagina e riprova.');
     }
 
+    // IP del client visto dal server NGINX.
+    // Per ora potrebbe essere l'IP del reverse proxy.
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
 
-    /*
-     * Recupero dei dati inseriti dall'utente.
-     *
-     * Sullo username utilizziamo trim(), perché eventuali spazi
-     * accidentali prima o dopo il nome utente non sono utili.
-     *
-     * Sulla password NON utilizziamo trim():
-     * deve essere verificata esattamente come inserita.
-     */
 
-    $ldapUser = trim($_POST['user'] ?? '');
-    $ldapPassword = $_POST['password'] ?? '';
 
-    if ($ldapUser === '') {
+    $turnstileToken = $_POST['cf-turnstile-response'] ?? '';
+    $turnstileHostname = $_ENV['TURNSTILE_HOSTNAME'] ?? '';
 
-        $errorMessage = 'Inserisci il nome utente.';
 
-    } elseif ($ldapPassword === '') {
-
-        $errorMessage = 'Inserisci la password.';
-
+    if (
+        !is_string($turnstileToken) ||
+        !verificaTurnstile($turnstileToken, $turnstileSecretKey, $ip, $turnstileHostname)
+    ) {
+        $errorMessage = 'Verifica di sicurezza non riuscita. Riprova.';
     } else {
+    
+
 
         /*
-         * Apertura connessione al server LDAP.
-         */
+        * Recupero dei dati inseriti dall'utente.
+        *
+        * Sullo username utilizziamo trim(), perché eventuali spazi
+        * accidentali prima o dopo il nome utente non sono utili.
+        *
+        * Sulla password NON utilizziamo trim():
+        * deve essere verificata esattamente come inserita.
+        */
 
-        $ldapConnection = ldap_connect($ldapHost);
+        $ldapUser = $_POST['user'] ?? '';
+        $ldapPassword = $_POST['password'] ?? '';
 
-        if ($ldapConnection === false) {
+        if (!is_string($ldapUser) || !is_string($ldapPassword)) {
+            http_response_code(400);
+            exit('Richiesta non valida.');
+        }
 
-            // Non mostriamo dettagli tecnici del server all'utente.
-            $errorMessage = 'Servizio di autenticazione temporaneamente non disponibile.';
+        $ldapUser = trim($ldapUser);
+
+        if ($ldapUser === '') {
+            $errorMessage = 'Inserisci il nome utente.';
+
+        } elseif (strlen($ldapUser) > 50) {
+            $errorMessage = 'Nome utente non valido.';
+
+        } elseif ($ldapPassword === '') {
+            $errorMessage = 'Inserisci la password.';
+
+        } elseif (strlen($ldapPassword) > 255 || str_contains($ldapPassword, "\0")) {
+            $errorMessage = 'Credenziali non valide.';
 
         } else {
-
-            /*
-             * Configurazione LDAP versione 3.
-             *
-             * LDAP_OPT_REFERRALS viene disabilitato per evitare
-             * problemi con i referral tipici di Active Directory.
-             */
-
-            ldap_set_option($ldapConnection, LDAP_OPT_PROTOCOL_VERSION, 3);
-            ldap_set_option($ldapConnection, LDAP_OPT_REFERRALS, 0);
-
-            /*
-             * Verifica delle credenziali.
-             *
-             * Il dominio utilizzato attualmente è DSI.
-             * Manteniamo invariato il comportamento del vecchio login.
-             */
-
-            $ldapbind = @ldap_bind(
-                $ldapConnection,
-                'DSI\\' . $ldapUser,
-                $ldapPassword
-            );
-
-            // La connessione non serve più dopo il bind.
-            ldap_close($ldapConnection);
+            
 
 
-            /*
-             * ------------------------------------------------
-             * 6. LOGIN RIUSCITO
-             * ------------------------------------------------
-             */
+            
+            if (!$conn) {
+                echo '<br>Non riesco a connettermi al db con le anagrafiche.';
+            }
+            //echo "conn= ".$conn ."<br>";
+            //exit;
+            if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+                $errorMessage = 'Impossibile identificare la connessione.';
+            } else {
+                try {
+                    
+                    
+                    
+                    // Verifica eventuali attese prima di contattare LDAP.
+                    $attesa = verificaTentativiLogin($conn_hub, $ldapUser, $ip);
+                    //echo $attesa."<br>";
 
-            if ($ldapbind) {
+                    if ($attesa > 0) {
+                        $errorMessage = "Troppi tentativi. Riprova tra {$attesa} secondi.";
+                    } else {
+                        $ldapConnection = ldap_connect($ldapHost);
 
-                /*
-                 * Rigenerazione dell'ID di sessione.
-                 *
-                 * È una protezione contro il session fixation:
-                 * dopo un'autenticazione riuscita viene generato
-                 * un nuovo identificativo di sessione.
-                 */
+                        if ($ldapConnection === false) {
+                            $errorMessage = 'Servizio di autenticazione temporaneamente non disponibile.';
+                        } else {
+                            ldap_set_option($ldapConnection, LDAP_OPT_PROTOCOL_VERSION, 3);
+                            ldap_set_option($ldapConnection, LDAP_OPT_REFERRALS, 0);
 
-                if (!session_regenerate_id(true)) {
-                    throw new RuntimeException(
-                        'Impossibile rigenerare la sessione.'
-                    );
+                            $ldapbind = @ldap_bind(
+                                $ldapConnection,
+                                'DSI\\' . $ldapUser,
+                                $ldapPassword
+                            );
+
+                            ldap_close($ldapConnection);
+
+                            // Registriamo sempre l'esito del bind.
+                            registraTentativoLogin(
+                                $conn_hub,
+                                $ldapUser,
+                                $ip,
+                                (bool) $ldapbind
+                            );
+
+                            if ($ldapbind) {
+                                if (!session_regenerate_id(true)) {
+                                    throw new RuntimeException('Rigenerazione sessione fallita.');
+                                }
+
+                                $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+                                $_SESSION['username'] = $ldapUser;
+                                $_SESSION['auth_time'] = time();
+                                $_SESSION['last_activity'] = time();
+
+                                $_SESSION['start'] = time();
+                                $_SESSION['expire'] = $_SESSION['start'] + 8 * 60 * 60;
+
+                                // Mantieni qui il tuo codice attuale
+                                // per il cookie "un" e il redirect.
+
+                                header('Location: ' . getLoginRedirect($origine), true, 303);
+                                exit;
+                            } else {
+                                $errorMessage = 'Credenziali non valide. Controlla il nome utente e la password.';
+                            }
+                        }
+                    }
+                } catch (Throwable $e) {
+                    error_log('Errore autenticazione: ' . $e->getMessage());
+                    $errorMessage = 'Servizio di autenticazione temporaneamente non disponibile.';
                 }
                 
-
-				// Genera un nuovo token per la sessione autenticata.
-				$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-                /*
-                 * Memorizzazione dell'identità dell'utente.
-                 *
-                 * Manteniamo il nome della variabile username:
-                 * le altre pagine del SIT possono continuare
-                 * a utilizzarla senza modifiche.
-                 */
-
-                $_SESSION['username'] = $ldapUser;
-
-				$_SESSION['auth_time'] = time();
-				$_SESSION['last_activity'] = time();
-
-
-				/* DA capire se utilizzate */
-                $_SESSION['start'] = time();
-                // Durata applicativa della sessione: 8 ore.
-                $_SESSION['expire'] = $_SESSION['start'] + (8 * 60 * 60);
-
-				
-
-
-                /*
-                 * Cookie "un".
-                 *
-                 * Lo manteniamo per compatibilità con il codice
-                 * esistente, visto che potrebbe essere letto
-                 * anche da JavaScript.
-                 *
-                 * Per questo motivo NON modifichiamo qui
-                 * httponly: rimane false come nel comportamento
-                 * precedente.
-                 */
-
-                setcookie('un', $ldapUser, [
-                    'expires'  => time() + (86400 * 7),
-                    'path'     => '/',
-                    'secure'   => true,
-                    'httponly' => false,
-                    'samesite' => 'Lax'
-                ]);
-
-
-                /*
-                 * Redirect HTTP verso la pagina di provenienza.
-                 *
-                 * Utilizziamo il codice 303 (See Other), che
-                 * porta il browser a richiedere la destinazione
-                 * con GET dopo il POST del login.
-                 *
-                 * Il redirect viene effettuato prima di produrre
-                 * qualsiasi contenuto HTML.
-                 */
-
-                $redirectUrl = getLoginRedirect($origine);
-
-                header('Location: ' . $redirectUrl, true, 303);
-                exit;
-
-
-            } else {
-
-                /*
-                 * Login non riuscito.
-                 *
-                 * Non comunichiamo al browser dettagli LDAP
-                 * o informazioni tecniche sull'infrastruttura.
-                 */
-
-                $errorMessage = 'Credenziali non valide. Controlla il nome utente e la password.';
-
             }
         }
+
     }
 }
-
 
 /*
  * ------------------------------------------------------------
@@ -431,6 +559,7 @@ $isTest = (($_SESSION['test'] ?? 0) == 1);
 
     <!-- CSS specifico della pagina di login -->
     <link rel="stylesheet" href="./includes/login.css">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
 </head>
 
@@ -608,8 +737,17 @@ $isTest = (($_SESSION['test'] ?? 0) == 1);
                     </small>
 
                 </div>
-
-
+                
+                <hr>
+                <!-- Turnastile Captche -->
+                <div class="cf-turnstile"
+                    data-sitekey="<?= htmlspecialchars($turnstileSiteKey, ENT_QUOTES, 'UTF-8') ?>"
+                    data-theme="auto"
+                    data-expired-callback="turnstileScaduto"
+                    data-error-callback="turnstileErrore">
+                </div>
+                <hr>
+                
                 <!-- Pulsante di accesso -->
                 <div class="form-group login-submit">
 

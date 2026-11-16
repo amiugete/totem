@@ -1,185 +1,221 @@
 <?php
 
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+
+// =========================
+// CONFIGURAZIONE SESSIONE
+// =========================
+
+require_once __DIR__ . '/includes/session_check.php';
+require_once __DIR__ . '/vendor/autoload.php';
+
+// Timeout
+$timeoutInattivita = 3 * 60 * 60;
+$timeoutAssoluto   = 8 * 60 * 60;
+
+$now = time();
+
+// Chiave segreta JWT da .env
+$jwtSecret = $_ENV['JWT_SECRET'] ?? '';
+
+// Issuer atteso: da configurare con il fornitore
+//$issuerAtteso = $_ENV['JWT_ISSUER'] ?? '';
+
+
+// =========================
+// FUNZIONI
+// =========================
+
 function redirect($url)
 {
     header("Location: $url");
     exit;
 }
 
-// =========================
-// CONFIG
-// =========================
-require_once __DIR__ . '/includes/session_check.php';
-
-// Timeout logico di inattività
-//$timeout = 6 * 60 * 60;
-
-
-
-$timeoutInattivita = 3 * 60 * 60;
-$timeoutAssoluto = 8 * 60 * 60;
-
-$now=time();
-
-//DA PRINTARE QUALCOSA PER CAPIRE COSA NON VA
-
-
-
-// Verifica scadenza per inattività
-if (
-    !isset($_SESSION['last_activity']) ||
-    ($now - $_SESSION['last_activity']) > $timeoutInattivita
-) {
-    echo "last_act: ". $_SESSION['last_activity']."<br>";
-    echo ($now - $_SESSION['last_activity']) ."<br>";
-    echo "timeoutInattivita= ". $timeoutInattivita."<br>";
-    echo "Sono qua";
-    exit();
+function terminaSessione()
+{
     $_SESSION = [];
-    session_destroy();
-    redirect('./login.php?expired=1');
-}
 
+    if (session_status() === PHP_SESSION_ACTIVE) {
 
-/*
-// =========================
-// KEEP ALIVE LOGICO
-// =========================
-if (isset($_SESSION['last_activity']) &&
-    (time() - $_SESSION['last_activity']) > $timeout) {
+        $params = session_get_cookie_params();
 
-    // sessione scaduta
-    $_SESSION = [];
-    session_destroy();
+        setcookie(session_name(), '', [
+            'expires'  => time() - 3600,
+            'path'     => $params['path'],
+            'domain'   => $params['domain'],
+            'secure'   => $params['secure'],
+            'httponly' => $params['httponly'],
+            'samesite' => $params['samesite']
+        ]);
 
-    redirect('./login.php?expired=1');
-}
-
-$_SESSION['last_activity'] = time();
-*/
-
-
-
-// Verifica scadenza assoluta
-if (
-    !isset($_SESSION['auth_time']) ||
-    ($now - $_SESSION['auth_time']) > $timeoutAssoluto
-) {
-    $_SESSION = [];
-    session_destroy();
-    redirect('./login.php?expired=1');
-}
-
-// Aggiorna ultima attività
-$_SESSION['last_activity'] = $now;
-
-
-// =========================
-// JWT / COOKIE LOGIN FLOW
-// =========================
-$userId = null;
-
-// JWT da GET
-if (isset($_GET['jwt'])) {
-
-    // pulizia cookie (come nel tuo codice)
-    /*if (isset($_SERVER['HTTP_COOKIE'])) {
-        $cookies = explode(';', $_SERVER['HTTP_COOKIE']);
-        foreach ($cookies as $cookie) {
-            $parts = explode('=', $cookie);
-            $name = trim($parts[0]);
-            setcookie($name, '', time() - 1000, '/');
-        }
-    }*/
-
-    $token0 = $_GET['jwt'];
-
-    if ($token0) {
-        setcookie("tokenCookie", $token0, time() + ($lifetime * 7), "/");
-        $token = $token0;
-    } else {
-        $token = $_COOKIE['tokenCookie'] ?? null;
+        session_destroy();
     }
 
-    if (!isset($_SESSION['username']) && $token) {
+    redirect('./login.php?expired=1');
+}
 
-        $decoded1 = json_decode(
-            base64_decode(str_replace('_', '/', str_replace('-', '+', explode('.', $token)[1])))
+function pulisciUrlJwt()
+{
+    $url = parse_url($_SERVER['REQUEST_URI']);
+
+    $query = [];
+    parse_str($url['query'] ?? '', $query);
+
+    unset($query['jwt']);
+
+    $nuovoUrl = $url['path'] ?? '/';
+
+    if (!empty($query)) {
+        $nuovoUrl .= '?' . http_build_query($query);
+    }
+
+    header('Location: ' . $nuovoUrl, true, 303);
+    exit;
+}
+
+
+// =========================
+// 1. SESSIONE NON AUTENTICATA
+// =========================
+
+if (empty($_SESSION['username'])) {
+
+ 
+
+    // Controlliamo se è arrivato un JWT
+    $token = $_GET['jwt'] ?? '';
+
+    if ($token === '') {
+        redirect('./login.php');
+    }
+
+    
+    // Configurazione obbligatoria
+    if ($jwtSecret === '') {
+        error_log('Configurazione JWT mancante.');
+        http_response_code(500);
+        exit('Errore di configurazione autenticazione.');
+    }
+    
+    try {
+        //echo '1<br>'.$jwtSecret."<br>";
+        //exit;
+        
+        // Ricostruzione della chiave esattamente come in C#
+        $keyBytes = $jwtSecret;
+
+        // C# usa Encoding.UTF8.GetBytes(key)
+        // e Array.Resize(ref symmetricKeyBytes, 64)
+        if (strlen($keyBytes) < 64) {
+            $keyBytes = str_pad($keyBytes, 64, "\0");
+        }
+
+        // Verifica firma HS256 e scadenza
+        $decoded = JWT::decode(
+            $token,
+            new Key($keyBytes, 'HS256')
         );
 
-        foreach ($decoded1 as $key => $value) {
 
-            if ($key == 'userId') {
-                $userId = (int)$value;
-            }
+        //echo '2<br>';
+        //exit;
+        // Verifica issuer
+        /*if (
+            !isset($decoded->iss) ||
+            !hash_equals($issuerAtteso, (string)$decoded->iss)
+        ) {
+            throw new UnexpectedValueException('Issuer non valido.');
+        }*/
 
-            if ($key == 'name') {
-                $_SESSION['username'] = $value;
+    
+        // Verifica dati utente
+        // =========================
+        // VERIFICA CLAIM JWT
+        // =========================
 
-                setcookie("un", $value, time() + (8 * 60 * 60), "/");
-
-                $_SESSION['start'] = time();
-                $_SESSION['expire'] = $_SESSION['start'] + $timeout;
-            }
-
-            if ($key == 'exp') {
-                if (time() > (int)$value && basename($_SERVER['PHP_SELF']) != 'login.php') {
-                    redirect('./login.php?expired=1');
-                }
-            }
+        // 1. Verifica presenza e validità della scadenza
+        if (
+            !isset($decoded->exp) ||
+            !is_numeric($decoded->exp) ||
+            (int)$decoded->exp <= time()
+        ) {
+            throw new UnexpectedValueException('Token scaduto o privo di exp.');
         }
-    }
-}
 
-// =========================
-// SESSIONE GIÀ ATTIVA
-// =========================
-else if (isset($_SESSION['username'])) {
+        // 2. Verifica nome utente
+        if (
+            !isset($decoded->name) ||
+            !is_string($decoded->name) ||
+            trim($decoded->name) === ''
+        ) {
+            throw new UnexpectedValueException('Nome utente non valido.');
+        }
 
-    setcookie("un", $_SESSION['username'], time() + (8 * 60 * 60), "/");
+        // 3. Verifica userId
+        if (
+            !isset($decoded->userId) ||
+            !is_numeric($decoded->userId) ||
+            (int)$decoded->userId <= 0
+        ) {
+            throw new UnexpectedValueException('userId non valido.');
+        }
 
-    if (!isset($_SESSION['expire'])) {
-        $_SESSION['expire'] = time() + $timeout;
-    }
+        // Creazione della nuova sessione autenticata
+        if (!session_regenerate_id(true)) {
+            throw new RuntimeException('Rigenerazione sessione fallita.');
+        }
 
-    if (time() > $_SESSION['expire'] && basename($_SERVER['PHP_SELF']) != 'login.php') {
+        $_SESSION['username'] = (string)$decoded->name;
+        $_SESSION['userId'] = (int)$decoded->userId;
 
-        $_SESSION = [];
-        session_destroy();
+        $_SESSION['auth_time'] = time();
+        $_SESSION['last_activity'] = time();
 
+        // Cookie di compatibilità per il codice JavaScript esistente.
+        // NON deve essere utilizzato per autenticare l'utente.
+        setcookie('un', $_SESSION['username'], [
+            'expires'  => time() + (8 * 60 * 60),
+            'path'     => $sessionPath ?? '/',
+            'secure'   => true,
+            'httponly' => false,
+            'samesite' => 'Lax'
+        ]);
+
+        // Eliminiamo il JWT dalla barra degli indirizzi
+        pulisciUrlJwt();
+
+    } catch (Throwable $e) {
+
+        // Dettagli tecnici solo nei log del server
+        error_log('Autenticazione JWT fallita: ' . $e->getMessage());
         redirect('./login.php?expired=1');
     }
 }
 
 
-/*
 // =========================
-// COOKIE FALLBACK
+// 2. SESSIONE GIÀ AUTENTICATA
 // =========================
-else if (isset($_COOKIE['un'])) {
 
-    $_SESSION['username'] = $_COOKIE['un'];
-
-    $_SESSION['start'] = time();
-    $_SESSION['expire'] = $_SESSION['start'] + $timeout;
-
-    setcookie("un", $_SESSION['username'], time() + (8 * 60 * 60), "/");
-
-    if (time() > $_SESSION['expire'] && basename($_SERVER['PHP_SELF']) != 'login.php') {
-
-        session_destroy();
-        redirect('./login.php?expired=1');
-    }
+// Controllo inattività
+if (
+    !isset($_SESSION['last_activity']) ||
+    ($now - (int)$_SESSION['last_activity']) > $timeoutInattivita
+) {
+    terminaSessione();
 }
-*/
 
-
-// =========================
-// ULTIMO CONTROLLO BLOCCANTE
-// =========================
-if (!isset($_SESSION['username']) &&
-    basename($_SERVER['PHP_SELF']) != 'login.php') {
-
-    redirect('./login.php');
+// Controllo durata assoluta
+if (
+    !isset($_SESSION['auth_time']) ||
+    ($now - (int)$_SESSION['auth_time']) > $timeoutAssoluto
+) {
+    terminaSessione();
 }
+
+// Aggiornamento ultima attività
+$_SESSION['last_activity'] = $now;
+
 ?>

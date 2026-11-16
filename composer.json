@@ -7,7 +7,8 @@
         "snapappointments/bootstrap-select": "^1.13",
         "wenzhixin/bootstrap-table": "^1.24",
         "hhurz/tableexport.jquery.plugin": "^1.33",
-        "moment/moment": "^2.30"
+        "moment/moment": "^2.30",
+        "firebase/php-jwt": "^7.2"
     },
     "config": {
         "allow-plugins": {

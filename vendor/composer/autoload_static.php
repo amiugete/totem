@@ -11,6 +11,10 @@ class ComposerStaticInit10fd51bd1f33e35023899e3433691e4c
         array (
             'OomphInc\\ComposerInstallersExtender\\' => 36,
         ),
+        'F' =>
+        array (
+            'Firebase\\JWT\\' => 13,
+        ),
         'C' =>
         array (
             'Composer\\Installers\\' => 20,
@@ -21,6 +25,10 @@ class ComposerStaticInit10fd51bd1f33e35023899e3433691e4c
         'OomphInc\\ComposerInstallersExtender\\' =>
         array (
             0 => __DIR__ . '/..' . '/oomphinc/composer-installers-extender/src',
+        ),
+        'Firebase\\JWT\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/firebase/php-jwt/src',
         ),
         'Composer\\Installers\\' =>
         array (
