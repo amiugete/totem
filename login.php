@@ -642,7 +642,12 @@ $isTest = (($_SESSION['test'] ?? 0) == 1);
                 </span>
 
             <?php endif; ?>
-
+            <a class="btn btn-info"
+        href="https://manuale-totem.readthedocs.io/it/latest/index.html"
+        target="_blank"
+        rel="noopener noreferrer">
+        <i class="fa-regular fa-circle-question"></i> Guida in linea
+    </a>
         </h3>
 
 
@@ -766,6 +771,9 @@ $isTest = (($_SESSION['test'] ?? 0) == 1);
             </div>
 
         </form>
+
+
+    
 
     </main>
 

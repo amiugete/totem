@@ -127,6 +127,15 @@ if ($check_modal!=1){
             <a class="dropdown-item" href="./backoffice_carburante.php">Carburante</a>         
           </div>
         </li>
+        <li class="nav-item">
+                    <a class="nav-link"
+                       href="https://manuale-totem.readthedocs.io/it/latest/index.html"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        <i class="fa-regular fa-circle-question"></i> Manuale
+                    </a>
+        </li>
+        
         <?php 
         } ?>
         <?php if ($check_superedit > 0) { ?>
