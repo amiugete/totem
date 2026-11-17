@@ -117,17 +117,17 @@ if ($check_modal!=1){
             <a class="dropdown-item" href="./backoffice_spazz_ext.php">Igiene (Spazzamento / lavaggio / aree verdi, etc)</a>         
           </div>
         </li>
-        <?php if ($check_superedit > 0) {  // da togliere il 17/11/2026 quando andiamo in produzione ?>
+        
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-controls="navbarDropdown1">
           Report
           </a>
           <div class="dropdown-menu" id="navbarDropdown1" aria-labelledby="navbarDropdown1">
-            <a class="dropdown-item" href="./backoffice_registrazioni.php">Registrazioni servizi</a>
+            <a class="dropdown-item" href="./backoffice_registrazioni.php">Associazione a servizi</a>
             <a class="dropdown-item" href="./backoffice_carburante.php">Carburante</a>         
           </div>
         </li>
-        <?php } // da togliere il 17/11/2026 quando andiamo in produzione
+        <?php 
         } ?>
         <?php if ($check_superedit > 0) { ?>
         <li class="nav-item dropdown">
