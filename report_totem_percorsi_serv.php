@@ -487,6 +487,9 @@ $("#keypad-ok").on("click", function () {
                 "danger",
                 true
             );
+            $("#result_mezzo")
+                .html('<div class="alert alert-danger" role="alert" style="margin-top: 1%;">Mezzo non trovato per lo sportello selezionato.</div>')
+                .fadeIn("slow");
 
             console.error(
                 "AJAX error:",
