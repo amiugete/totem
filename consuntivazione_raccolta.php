@@ -206,12 +206,18 @@ if (pg_last_error($conn_hub)){
     $timezone = new DateTimeZone('Europe/Rome');
     $today->setTimezone($timezone);
     $hour = $today->format('Hi');
-    if ($hour < '0301'){
+
+
+    $ora_check1 = $_ENV['SWITCH_DATA'] ?? '';
+    // la trasformo in Datetime per printarla sotto
+    $ora_check1_time = DateTime::createFromFormat('Hi', $ora_check1);
+    $ora_check2 = $_ENV['SWITCH_DATA_MSG'] ?? '';
+    if ($hour < $ora_check1){
       $today = $today->modify("-1 day");
-      $nota_data='<font color="red"> <i class="fa-solid fa-clock-rotate-left"></i> Prima delle 3 è impostata la data di ieri</font>';
+      $nota_data="<font color='red'> <i class='fa-solid fa-clock-rotate-left'></i> Prima delle " . $ora_check1_time->format('H:i')." è impostata la data di ieri. Se necessario cliccare sulla data sopra e modificarla.</font>";
     }
     
-    if ($hour >= '0301' AND $hour < '1150'){
+    if ($hour >= $ora_check1 AND $hour < $ora_check2){
         $nota_data='<font color="#cc0000"> <i class="fa-solid fa-clock-rotate-left"></i> E\' impostata la data di oggi.<br> Se sbagliata cliccare sulla data sopra</font>';
     } 
 
