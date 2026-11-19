@@ -2,6 +2,8 @@
 //session_set_cookie_params($lifetime);
 require_once __DIR__ . '/includes/session_check.php';
 
+$pageDescription = 'Registrazione rifornimento carburante';
+
 
 // PARAMETRI DA SPOSTARE NELL'ENV
 $max_litri = 1000;
@@ -17,10 +19,11 @@ $costo_massimo = 3.00;
 <head>
 
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="roberto" >
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta name="author" content="APTE - Assterritorio">
+    <meta name="google" content="notranslate">
+
 
     <title>Gestione rifornimenti carburante</title>
 <?php 

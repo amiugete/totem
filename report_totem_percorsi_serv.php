@@ -307,7 +307,7 @@ function closeToast() {
         <div class="col-8" id="box_sportello" style="display:none;">
             <label for="sportello_input" class="form-label">
                 <i class="fa-solid fa-truck-moving"></i> 
-            Inserisci lo sportello
+            Inserisci sportello e <i>verifica</i>
             </label>
             <input type="text" class="form-control" id="sportello_input" 
                 oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5);" 
@@ -335,7 +335,9 @@ function closeToast() {
                             <div class="col-4"><button type="button" class="btn btn-secondary w-100 keypad-btn">0</button></div>
                             <div class="col-4"><button type="button" class="btn btn-success w-100" id="keypad-ok">Verifica</button></div>
                         </div>
-
+                        <div class="row g-2">
+                        <small>La verifica dello sportello è necessaria per poter procedere all'invio dei dati</small>
+                        </div>
                     </div>
         </div>
 
