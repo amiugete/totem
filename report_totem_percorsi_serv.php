@@ -356,6 +356,7 @@ function closeToast() {
                 style="display:none; height: 80px; font-size: 1.5rem;">
                     Invia dati
                 </button>
+            <small>In caso di autista è necessario inserire uno sportello e cliccare sul tasto verifica</small>
             </div>
 
         </div>
