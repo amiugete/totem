@@ -3,7 +3,7 @@
 #require_once __DIR__ . '/../includes/session_check.php';
 require_once __DIR__ . '/../carica_env.php';
 require_once __DIR__ . '/../conn_ok.php';
-
+require_once __DIR__ . '/../includes/session_check.php';
 
 $id_percorso=$_POST['id'];
 //echo $id_percorso.'<br>';
